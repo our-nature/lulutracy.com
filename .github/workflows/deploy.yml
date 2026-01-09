@@ -44,7 +44,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
         with:
           static_site_generator: gatsby
 
