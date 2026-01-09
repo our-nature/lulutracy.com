@@ -2,13 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [main, 'claude/**']
+    branches: [main]
     paths-ignore:
       - '**.md'
       - '.github/plans/**'
       - 'LICENSE'
   pull_request:
-    branches: [main]
     paths-ignore:
       - '**.md'
       - '.github/plans/**'
@@ -16,7 +15,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.ref_name }}
   cancel-in-progress: true
 
 env:
