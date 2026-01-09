@@ -1,6 +1,6 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
-import PaintingTemplate from '../painting'
+import PaintingTemplate, { Head } from '../painting'
 import type { Painting } from '../../types'
 
 // Mock drift-zoom
@@ -110,6 +110,87 @@ const mockDataWithImageButNoZoom = {
   zoomFile: null,
 }
 
+// Test data with srcSet only (no fallback.src)
+const mockDataWithSrcSetOnly = {
+  file: {
+    childImageSharp: {
+      gatsbyImageData: {
+        layout: 'constrained' as const,
+        width: 800,
+        height: 600,
+        images: {
+          fallback: {
+            srcSet: '/test-400.jpg 400w, /test-800.jpg 800w',
+            sizes: '(min-width: 800px) 800px, 100vw',
+          },
+        },
+      },
+    },
+  },
+  zoomFile: null,
+}
+
+// Test data with sources array only (no fallback)
+const mockDataWithSourcesOnly = {
+  file: {
+    childImageSharp: {
+      gatsbyImageData: {
+        layout: 'constrained' as const,
+        width: 800,
+        height: 600,
+        images: {
+          sources: [
+            {
+              type: 'image/webp',
+              srcSet: '/test-400.webp 400w, /test-800.webp 800w',
+              sizes: '(min-width: 800px) 800px, 100vw',
+            },
+          ],
+        },
+      },
+    },
+  },
+  zoomFile: null,
+}
+
+// Test data with empty images object
+const mockDataWithEmptyImages = {
+  file: {
+    childImageSharp: {
+      gatsbyImageData: {
+        layout: 'constrained' as const,
+        width: 800,
+        height: 600,
+        images: {},
+      },
+    },
+  },
+  zoomFile: null,
+}
+
+// Test data with sources but no webp
+const mockDataWithNonWebpSources = {
+  file: {
+    childImageSharp: {
+      gatsbyImageData: {
+        layout: 'constrained' as const,
+        width: 800,
+        height: 600,
+        images: {
+          sources: [
+            {
+              type: 'image/avif',
+              srcSet: '/test-800.avif 800w',
+              sizes: '(min-width: 800px) 800px, 100vw',
+            },
+          ],
+        },
+      },
+    },
+  },
+  zoomFile: null,
+}
+
 // Cast to any to bypass Gatsby PageProps typing in tests
 const renderPaintingTemplate = (
   data = mockDataWithImage,
@@ -175,8 +256,70 @@ describe('PaintingTemplate', () => {
   it('falls back to display image when zoom image is not available', () => {
     renderPaintingTemplate(mockDataWithImageButNoZoom as any)
     const img = screen.getByRole('img', { name: /test painting alt text/i })
-    // Should use the same image for both src and data-zoom
     expect(img).toHaveAttribute('src', '/test.jpg')
     expect(img).toHaveAttribute('data-zoom', '/test.jpg')
+  })
+
+  describe('getImageUrl edge cases', () => {
+    it('extracts URL from srcSet when fallback.src is missing', () => {
+      renderPaintingTemplate(mockDataWithSrcSetOnly as any)
+      const img = screen.getByRole('img', { name: /test painting alt text/i })
+      // Should extract the last URL from srcSet
+      expect(img).toHaveAttribute('src', '/test-800.jpg')
+    })
+
+    it('extracts URL from webp sources when fallback is missing', () => {
+      renderPaintingTemplate(mockDataWithSourcesOnly as any)
+      const img = screen.getByRole('img', { name: /test painting alt text/i })
+      // Should extract the last URL from webp srcSet
+      expect(img).toHaveAttribute('src', '/test-800.webp')
+    })
+
+    it('falls back to GatsbyImage when getImageUrl returns empty', () => {
+      renderPaintingTemplate(mockDataWithEmptyImages as any)
+      // When getImageUrl returns empty string, canUseMagnifier is false
+      // but GatsbyImage is shown as fallback since imageData exists
+      const img = screen.getByRole('img', { name: /test painting alt text/i })
+      expect(img).toBeInTheDocument()
+      // Should not have data-zoom attribute (GatsbyImage mock)
+      expect(screen.queryByTestId('glass-magnifier')).not.toBeInTheDocument()
+    })
+
+    it('falls back to GatsbyImage when sources have no webp type', () => {
+      renderPaintingTemplate(mockDataWithNonWebpSources as any)
+      // Non-webp sources are not extracted by getImageUrl
+      // but GatsbyImage is shown as fallback
+      const img = screen.getByRole('img', { name: /test painting alt text/i })
+      expect(img).toBeInTheDocument()
+      expect(screen.queryByTestId('glass-magnifier')).not.toBeInTheDocument()
+    })
+  })
+})
+
+describe('Head component', () => {
+  it('renders title with painting name', () => {
+    render(
+      <Head
+        data={mockDataWithImage as any}
+        pageContext={mockPageContext}
+        {...({} as any)}
+      />
+    )
+    const title = document.querySelector('title')
+    expect(title?.textContent).toBe('Test Painting Title | Lulu Tracy')
+  })
+
+  it('renders meta description with painting description', () => {
+    render(
+      <Head
+        data={mockDataWithImage as any}
+        pageContext={mockPageContext}
+        {...({} as any)}
+      />
+    )
+    const metaDescription = document.querySelector('meta[name="description"]')
+    expect(metaDescription?.getAttribute('content')).toBe(
+      'This is a test painting description.'
+    )
   })
 })

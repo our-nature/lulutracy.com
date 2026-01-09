@@ -1,18 +1,30 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import GlassMagnifier from '../GlassMagnifier'
 import Drift from 'drift-zoom'
+
+// Store onShow and onHide callbacks to call them in tests
+let capturedOnShow: (() => void) | null = null
+let capturedOnHide: (() => void) | null = null
+let mockDestroyFn: jest.Mock = jest.fn()
+
+// Default mock implementation
+const createMockDrift = (_el: unknown, options?: { onShow?: () => void; onHide?: () => void }) => {
+  capturedOnShow = options?.onShow || null
+  capturedOnHide = options?.onHide || null
+  return {
+    disable: jest.fn(),
+    enable: jest.fn(),
+    setZoomImageURL: jest.fn(),
+    destroy: mockDestroyFn,
+  }
+}
 
 // Mock drift-zoom
 jest.mock('drift-zoom', () => {
   return {
     __esModule: true,
-    default: jest.fn().mockImplementation(() => ({
-      disable: jest.fn(),
-      enable: jest.fn(),
-      setZoomImageURL: jest.fn(),
-      destroy: jest.fn(),
-    })),
+    default: jest.fn(),
   }
 })
 
@@ -38,6 +50,10 @@ const mockMatchMedia = (matches: boolean) => {
 describe('GlassMagnifier', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    capturedOnShow = null
+    capturedOnHide = null
+    mockDestroyFn = jest.fn()
+    MockedDrift.mockImplementation(createMockDrift as unknown as typeof Drift)
     mockMatchMedia(false) // Default to desktop
   })
 
@@ -96,17 +112,6 @@ describe('GlassMagnifier', () => {
   })
 
   it('cleans up Drift instance on unmount', async () => {
-    const mockDestroy = jest.fn()
-    MockedDrift.mockImplementation(
-      () =>
-        ({
-          destroy: mockDestroy,
-          disable: jest.fn(),
-          enable: jest.fn(),
-          setZoomImageURL: jest.fn(),
-        }) as unknown as Drift
-    )
-
     const { unmount } = render(<GlassMagnifier {...defaultProps} />)
 
     const img = screen.getByRole('img')
@@ -118,7 +123,7 @@ describe('GlassMagnifier', () => {
 
     unmount()
 
-    expect(mockDestroy).toHaveBeenCalled()
+    expect(mockDestroyFn).toHaveBeenCalled()
   })
 
   it('passes correct zoom factor to Drift on desktop', async () => {
@@ -173,5 +178,118 @@ describe('GlassMagnifier', () => {
         })
       )
     })
+  })
+
+  it('passes onShow and onHide callbacks to Drift', async () => {
+    render(<GlassMagnifier {...defaultProps} />)
+
+    const img = screen.getByRole('img')
+    fireEvent.load(img)
+
+    await waitFor(() => {
+      expect(MockedDrift).toHaveBeenCalled()
+    })
+
+    // Verify callbacks were passed to Drift
+    expect(MockedDrift).toHaveBeenCalledWith(
+      expect.any(HTMLElement),
+      expect.objectContaining({
+        onShow: expect.any(Function),
+        onHide: expect.any(Function),
+      })
+    )
+  })
+
+  it('handles Drift initialization error gracefully', async () => {
+    const consoleWarnSpy = jest
+      .spyOn(console, 'warn')
+      .mockImplementation(() => {})
+    MockedDrift.mockImplementation(() => {
+      throw new Error('Drift init failed')
+    })
+
+    render(<GlassMagnifier {...defaultProps} />)
+
+    const img = screen.getByRole('img')
+    fireEvent.load(img)
+
+    await waitFor(() => {
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        'Failed to initialize Drift magnifier:',
+        expect.any(Error)
+      )
+    })
+
+    consoleWarnSpy.mockRestore()
+  })
+
+  it('reinitializes Drift when mobile state changes', async () => {
+    mockMatchMedia(false) // Start as desktop
+    const { rerender } = render(<GlassMagnifier {...defaultProps} />)
+
+    const img = screen.getByRole('img')
+    fireEvent.load(img)
+
+    await waitFor(() => {
+      expect(MockedDrift).toHaveBeenCalledTimes(1)
+    })
+
+    // Simulate resize to mobile
+    mockMatchMedia(true)
+    act(() => {
+      window.dispatchEvent(new Event('resize'))
+    })
+
+    // Force rerender to pick up new matchMedia
+    rerender(<GlassMagnifier {...defaultProps} />)
+
+    // Wait for destroy and reinit
+    await waitFor(() => {
+      expect(mockDestroyFn).toHaveBeenCalled()
+    })
+  })
+
+  it('applies reduced zoom factor on mobile', async () => {
+    mockMatchMedia(true) // Mobile
+
+    render(<GlassMagnifier {...defaultProps} zoomFactor={2} />)
+
+    const img = screen.getByRole('img')
+    fireEvent.load(img)
+
+    await waitFor(() => {
+      expect(MockedDrift).toHaveBeenCalledWith(
+        expect.any(HTMLElement),
+        expect.objectContaining({
+          // Mobile zoom factor is 0.75 * zoomFactor
+          zoomFactor: 1.5,
+        })
+      )
+    })
+  })
+
+  it('does not initialize Drift before image loads', () => {
+    render(<GlassMagnifier {...defaultProps} />)
+    // Drift should not be called until image loads
+    expect(MockedDrift).not.toHaveBeenCalled()
+  })
+
+  it('does not reinitialize Drift if already initialized with same settings', async () => {
+    mockMatchMedia(false) // Desktop
+
+    render(<GlassMagnifier {...defaultProps} />)
+
+    const img = screen.getByRole('img')
+    fireEvent.load(img)
+
+    await waitFor(() => {
+      expect(MockedDrift).toHaveBeenCalledTimes(1)
+    })
+
+    // Trigger another load event (should not reinitialize)
+    fireEvent.load(img)
+
+    // Still only one call
+    expect(MockedDrift).toHaveBeenCalledTimes(1)
   })
 })
