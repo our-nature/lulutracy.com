@@ -1,4 +1,45 @@
 {
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Write(src/**)",
+      "Write(content/**)",
+      "Write(.claude/**)",
+      "Edit(src/**)",
+      "Edit(content/**)",
+      "Edit(.claude/**)",
+      "Bash(npm run *)",
+      "Bash(npm test *)",
+      "Bash(npm install)",
+      "Bash(npm ci)",
+      "Bash(npx *)",
+      "Bash(make *)",
+      "Bash(git *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(grep *)",
+      "Bash(find *)",
+      "Bash(node *)"
+    ],
+    "deny": [
+      "Write(node_modules/**)",
+      "Write(.git/**)",
+      "Write(package-lock.json)",
+      "Edit(node_modules/**)",
+      "Edit(.git/**)",
+      "Bash(rm -rf /)*",
+      "Bash(rm -rf ~)*",
+      "Bash(sudo *)",
+      "Bash(chmod -R 777 *)",
+      "Bash(npm publish)*",
+      "Bash(git push --force origin main)*",
+      "Bash(git push -f origin main)*"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {

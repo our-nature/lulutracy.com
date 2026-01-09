@@ -314,6 +314,41 @@ Configured in `.claude/settings.json`:
 | `pre-bash-safety.sh` | PreToolUse (Bash) | Block dangerous commands |
 | `post-bash-build.sh` | PostToolUse (Bash) | Verify build after changes |
 
+### Permissions
+
+Configured in `.claude/settings.json` to restrict Claude's access:
+
+**Allowed**:
+- Read/Write/Edit in `src/`, `content/`, `.claude/`
+- Common bash commands (`npm`, `make`, `git`, `node`)
+
+**Denied**:
+- Modifying `node_modules/`, `.git/`, `package-lock.json`
+- Destructive commands (`rm -rf /`, `sudo`, `npm publish`)
+- Force pushing to main branch
+
+### Memory (Persistent Context)
+
+Located in `.claude/memory/`:
+
+| File | Purpose |
+|------|---------|
+| `decisions.md` | Architecture and design decisions |
+| `known-issues.md` | Known problems and workarounds |
+| `patterns.md` | Codebase patterns to follow |
+
+Claude should reference these files for consistency and to avoid repeating past mistakes.
+
+### MCP Servers
+
+Configured in `.mcp.json` (disabled by default, enable as needed):
+
+| Server | Purpose |
+|--------|---------|
+| `filesystem` | Enhanced file operations |
+| `github` | GitHub PR/issue integration (requires GITHUB_TOKEN) |
+| `fetch` | Web fetching capabilities |
+
 ## Environment Requirements
 
 ### Local Development
