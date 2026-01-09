@@ -1,0 +1,15 @@
+.gallery {
+  max-width: var(--max-width-gallery);
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+@media (max-width: 768px) {
+  .gallery {
+    padding: var(--spacing-md);
+    gap: var(--spacing-md);
+  }
+}

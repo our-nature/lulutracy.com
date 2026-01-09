@@ -1,0 +1,62 @@
+.about {
+  max-width: var(--max-width-content);
+  margin: 0 auto;
+  padding: var(--spacing-2xl) var(--spacing-lg);
+}
+
+.photoContainer {
+  margin-bottom: var(--spacing-xl);
+}
+
+.photo {
+  max-width: 300px;
+}
+
+.content {
+  max-width: 100%;
+}
+
+.artistName {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-normal);
+  margin-bottom: var(--spacing-lg);
+  color: var(--color-text);
+}
+
+.biography {
+  color: var(--color-text-light);
+  line-height: var(--line-height-loose);
+}
+
+.biography p {
+  margin-bottom: var(--spacing-lg);
+}
+
+.biography p:last-child {
+  margin-bottom: 0;
+}
+
+.contactButton {
+  display: inline-block;
+  margin-top: var(--spacing-xl);
+  padding: var(--spacing-sm) var(--spacing-xl);
+  border: 1px solid var(--color-border);
+  border-radius: 50px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.contactButton:hover {
+  background-color: var(--color-black);
+  color: var(--color-white);
+}
+
+@media (max-width: 768px) {
+  .about {
+    padding: var(--spacing-xl) var(--spacing-md);
+  }
+}

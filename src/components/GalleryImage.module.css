@@ -1,0 +1,25 @@
+.galleryItem {
+  display: block;
+  width: 100%;
+  transition: opacity var(--transition-fast);
+}
+
+.galleryItem:hover {
+  opacity: 0.9;
+}
+
+.image {
+  width: 100%;
+  height: auto;
+}
+
+.placeholder {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background-color: var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-light);
+  font-size: var(--font-size-sm);
+}
