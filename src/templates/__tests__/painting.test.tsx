@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import PaintingTemplate, { Head } from '../painting'
 import type { Painting } from '../../types'
 
@@ -100,49 +100,6 @@ const mockDataWithImageButNoZoom = {
   zoomFile: null,
 }
 
-// Test data with srcSet only (no fallback.src)
-const mockDataWithSrcSetOnly = {
-  file: {
-    childImageSharp: {
-      gatsbyImageData: {
-        layout: 'constrained' as const,
-        width: 800,
-        height: 600,
-        images: {
-          fallback: {
-            srcSet: '/test-400.jpg 400w, /test-800.jpg 800w',
-            sizes: '(min-width: 800px) 800px, 100vw',
-          },
-        },
-      },
-    },
-  },
-  zoomFile: null,
-}
-
-// Test data with sources array only (no fallback)
-const mockDataWithSourcesOnly = {
-  file: {
-    childImageSharp: {
-      gatsbyImageData: {
-        layout: 'constrained' as const,
-        width: 800,
-        height: 600,
-        images: {
-          sources: [
-            {
-              type: 'image/webp',
-              srcSet: '/test-400.webp 400w, /test-800.webp 800w',
-              sizes: '(min-width: 800px) 800px, 100vw',
-            },
-          ],
-        },
-      },
-    },
-  },
-  zoomFile: null,
-}
-
 // Test data with empty images object
 const mockDataWithEmptyImages = {
   file: {
@@ -152,29 +109,6 @@ const mockDataWithEmptyImages = {
         width: 800,
         height: 600,
         images: {},
-      },
-    },
-  },
-  zoomFile: null,
-}
-
-// Test data with sources but no webp
-const mockDataWithNonWebpSources = {
-  file: {
-    childImageSharp: {
-      gatsbyImageData: {
-        layout: 'constrained' as const,
-        width: 800,
-        height: 600,
-        images: {
-          sources: [
-            {
-              type: 'image/avif',
-              srcSet: '/test-800.avif 800w',
-              sizes: '(min-width: 800px) 800px, 100vw',
-            },
-          ],
-        },
       },
     },
   },
@@ -250,38 +184,32 @@ describe('PaintingTemplate', () => {
     expect(img).toHaveAttribute('data-zoom', '/test.jpg')
   })
 
-  describe('getImageUrl edge cases', () => {
-    it('extracts URL from srcSet when fallback.src is missing', () => {
-      renderPaintingTemplate(mockDataWithSrcSetOnly as any)
-      const img = screen.getByRole('img', { name: /test painting alt text/i })
-      // Should extract the last URL from srcSet
-      expect(img).toHaveAttribute('src', '/test-800.jpg')
-    })
-
-    it('extracts URL from webp sources when fallback is missing', () => {
-      renderPaintingTemplate(mockDataWithSourcesOnly as any)
-      const img = screen.getByRole('img', { name: /test painting alt text/i })
-      // Should extract the last URL from webp srcSet
-      expect(img).toHaveAttribute('src', '/test-800.webp')
-    })
-
-    it('falls back to GatsbyImage when getImageUrl returns empty', () => {
+  describe('image fallback cases', () => {
+    it('falls back to GatsbyImage when image data has no fallback src', () => {
       renderPaintingTemplate(mockDataWithEmptyImages as any)
-      // When getImageUrl returns empty string, canUseMagnifier is false
+      // When getSrc returns undefined, canUseMagnifier is false
       // but GatsbyImage is shown as fallback since imageData exists
       const img = screen.getByRole('img', { name: /test painting alt text/i })
       expect(img).toBeInTheDocument()
-      // Should not have data-zoom attribute (GatsbyImage mock)
+      // Should not have glass-magnifier (GatsbyImage is used instead)
       expect(screen.queryByTestId('glass-magnifier')).not.toBeInTheDocument()
     })
 
-    it('falls back to GatsbyImage when sources have no webp type', () => {
-      renderPaintingTemplate(mockDataWithNonWebpSources as any)
-      // Non-webp sources are not extracted by getImageUrl
-      // but GatsbyImage is shown as fallback
+    it('falls back to GatsbyImage when magnifier image fails to load', () => {
+      renderPaintingTemplate()
+      // Initially renders with GlassMagnifier
+      expect(screen.getByTestId('glass-magnifier')).toBeInTheDocument()
+
+      // Simulate image error
       const img = screen.getByRole('img', { name: /test painting alt text/i })
-      expect(img).toBeInTheDocument()
+      fireEvent.error(img)
+
+      // After error, should fall back to GatsbyImage (no glass-magnifier)
       expect(screen.queryByTestId('glass-magnifier')).not.toBeInTheDocument()
+      // GatsbyImage mock renders a simple img tag
+      expect(
+        screen.getByRole('img', { name: /test painting alt text/i })
+      ).toBeInTheDocument()
     })
   })
 })

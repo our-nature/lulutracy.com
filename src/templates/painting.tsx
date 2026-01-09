@@ -1,6 +1,11 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { graphql, PageProps, HeadFC } from 'gatsby'
-import { GatsbyImage, getImage, IGatsbyImageData } from 'gatsby-plugin-image'
+import {
+  GatsbyImage,
+  getImage,
+  getSrc,
+  IGatsbyImageData,
+} from 'gatsby-plugin-image'
 import Layout from '../components/Layout'
 import GlassMagnifier from '../components/GlassMagnifier'
 import type { Painting } from '../types'
@@ -25,59 +30,28 @@ interface PaintingPageData {
   } | null
 }
 
-/**
- * Extract the best available image URL from Gatsby image data
- */
-const getImageUrl = (imageData: IGatsbyImageData | undefined): string => {
-  if (!imageData) return ''
-
-  // Try to get the fallback src first (most reliable)
-  const fallback = imageData.images?.fallback?.src
-  if (fallback) return fallback
-
-  // Try srcSet and get the largest image
-  const srcSet = imageData.images?.fallback?.srcSet
-  if (srcSet) {
-    const sources = srcSet.split(',').map((s) => s.trim())
-    const lastSource = sources[sources.length - 1]
-    if (lastSource) {
-      const url = lastSource.split(' ')[0]
-      if (url) return url
-    }
-  }
-
-  // Fallback to sources array
-  const sources = imageData.images?.sources
-  if (sources && sources.length > 0) {
-    const webpSource = sources.find((s) => s.type === 'image/webp')
-    if (webpSource?.srcSet) {
-      const srcSetParts = webpSource.srcSet.split(',').map((s) => s.trim())
-      const lastPart = srcSetParts[srcSetParts.length - 1]
-      if (lastPart) {
-        const url = lastPart.split(' ')[0]
-        if (url) return url
-      }
-    }
-  }
-
-  return ''
-}
-
 const PaintingTemplate: React.FC<
   PageProps<PaintingPageData, PaintingPageContext>
 > = ({ data, pageContext }) => {
   const { painting } = pageContext
+  const [magnifierError, setMagnifierError] = useState(false)
+
   const imageData = data.file?.childImageSharp
     ? getImage(data.file.childImageSharp.gatsbyImageData)
     : null
   const zoomImageData = data.zoomFile?.childImageSharp?.gatsbyImageData
 
-  // Get URLs for the magnifier
-  const displayUrl = getImageUrl(data.file?.childImageSharp?.gatsbyImageData)
-  const zoomUrl = getImageUrl(zoomImageData) || displayUrl
+  // Get URLs for the magnifier using Gatsby's official getSrc helper
+  const displayImageData = data.file?.childImageSharp?.gatsbyImageData
+  const displayUrl = displayImageData ? getSrc(displayImageData) : undefined
+  const zoomUrl = zoomImageData ? getSrc(zoomImageData) : displayUrl
 
-  // Check if we have valid URLs for the magnifier
-  const canUseMagnifier = displayUrl && zoomUrl
+  // Check if we have valid URLs for the magnifier (and no previous error)
+  const canUseMagnifier = displayUrl && zoomUrl && !magnifierError
+
+  const handleMagnifierError = () => {
+    setMagnifierError(true)
+  }
 
   return (
     <Layout>
@@ -91,6 +65,7 @@ const PaintingTemplate: React.FC<
               className={styles.magnifierContainer}
               zoomFactor={2.5}
               enableTouch={true}
+              onError={handleMagnifierError}
             />
           ) : imageData ? (
             <GatsbyImage
@@ -141,10 +116,10 @@ export const query = graphql`
     ) {
       childImageSharp {
         gatsbyImageData(
-          width: 800
-          placeholder: BLURRED
+          width: 1200
+          placeholder: DOMINANT_COLOR
           formats: [AUTO, WEBP, AVIF]
-          quality: 90
+          quality: 85
         )
       }
     }

@@ -14,8 +14,14 @@ const StaticImage = jest
 
 const getImage = jest.fn().mockImplementation((image) => image)
 
+// getSrc extracts the fallback src from gatsbyImageData
+const getSrc = jest
+  .fn()
+  .mockImplementation((imageData) => imageData?.images?.fallback?.src)
+
 module.exports = {
   GatsbyImage,
   StaticImage,
   getImage,
+  getSrc,
 }
