@@ -50,7 +50,7 @@
 .navLink {
   display: block;
   padding: var(--spacing-sm) 0;
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   color: var(--color-text);
   transition: color var(--transition-fast);
 }

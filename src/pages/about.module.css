@@ -6,6 +6,8 @@
 
 .photoContainer {
   margin-bottom: var(--spacing-xl);
+  display: flex;
+  justify-content: center;
 }
 
 .photo {
@@ -16,7 +18,7 @@
 @media (min-width: 768px) {
   .about {
     display: grid;
-    grid-template-columns: 45% 1fr;
+    grid-template-columns: 35% 1fr;
     gap: var(--spacing-2xl);
     align-items: start;
     max-width: 1000px;
@@ -44,6 +46,7 @@
 }
 
 .biography {
+  font-size: var(--font-size-sm);
   color: var(--color-text-light);
   line-height: var(--line-height-loose);
 }
