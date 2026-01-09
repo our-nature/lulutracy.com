@@ -4,7 +4,10 @@ import { StaticImage } from 'gatsby-plugin-image'
 import type { HeaderProps } from '../types'
 import * as styles from './Header.module.css'
 
-const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
+const Header: React.FC<HeaderProps> = ({
+  onMenuToggle,
+  isMenuOpen = false,
+}) => {
   return (
     <header className={styles.header}>
       <div className={styles.container}>
@@ -25,7 +28,9 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
           aria-label="Toggle navigation menu"
           type="button"
         >
-          <span className={styles.hamburger}>
+          <span
+            className={`${styles.hamburger} ${isMenuOpen ? styles.hamburgerOpen : ''}`}
+          >
             <span className={styles.hamburgerLine}></span>
             <span className={styles.hamburgerLine}></span>
             <span className={styles.hamburgerLine}></span>

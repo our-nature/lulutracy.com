@@ -19,7 +19,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className={styles.layout}>
-      <Header onMenuToggle={toggleMenu} />
+      <Header onMenuToggle={toggleMenu} isMenuOpen={isMenuOpen} />
       <Navigation isOpen={isMenuOpen} onClose={closeMenu} />
       <main className={styles.main}>{children}</main>
       <Footer />

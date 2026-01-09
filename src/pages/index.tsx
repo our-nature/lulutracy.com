@@ -61,15 +61,52 @@ const IndexPage: React.FC<PageProps<IndexPageData>> = ({ data }) => {
 
 export default IndexPage
 
-export const Head: HeadFC = () => (
-  <>
-    <title>Lulu Tracy | Art Portfolio</title>
-    <meta
-      name="description"
-      content="Art portfolio of Lulu Tracy - exploring nature through watercolors and acrylics"
-    />
-  </>
-)
+const SITE_URL = 'https://alexnodeland.github.io/lulutracy.com'
+
+export const Head: HeadFC<IndexPageData> = ({ data }) => {
+  const description =
+    'Art portfolio of Lulu Tracy - exploring nature through watercolors and acrylics'
+
+  // Get first painting image for OG image
+  const paintingsData = data.allPaintingsYaml.nodes[0]
+  const paintings = paintingsData?.paintings || []
+  const sortedPaintings = [...paintings].sort((a, b) => a.order - b.order)
+  const firstPainting = sortedPaintings[0]
+  const imageNodes = data.allFile.nodes
+  const imageName = firstPainting?.image.replace(/\.[^/.]+$/, '')
+  const imageNode = imageNodes.find((node) => node.name === imageName)
+  const ogImage = imageNode?.childImageSharp?.gatsbyImageData?.images?.fallback
+    ?.src
+    ? `${SITE_URL}${imageNode.childImageSharp.gatsbyImageData.images.fallback.src}`
+    : `${SITE_URL}/icon.png`
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Lulu Tracy Art Portfolio',
+    description,
+    url: SITE_URL,
+  }
+
+  return (
+    <>
+      <title>Lulu Tracy | Art Portfolio</title>
+      <meta name="description" content={description} />
+
+      {/* Open Graph meta tags */}
+      <meta property="og:title" content="Lulu Tracy | Art Portfolio" />
+      <meta property="og:description" content={description} />
+      <meta property="og:url" content={SITE_URL} />
+      <meta property="og:image" content={ogImage} />
+      <meta property="og:type" content="website" />
+      <meta property="og:site_name" content="Lulu Tracy" />
+      <meta property="og:locale" content="en_US" />
+
+      {/* JSON-LD structured data */}
+      <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+    </>
+  )
+}
 
 export const query = graphql`
   query IndexPage {
