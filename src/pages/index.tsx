@@ -131,10 +131,12 @@ export const query = graphql`
         name
         childImageSharp {
           gatsbyImageData(
-            width: 400
+            width: 450
+            aspectRatio: 1
             placeholder: DOMINANT_COLOR
             formats: [AUTO, WEBP, AVIF]
             quality: 85
+            breakpoints: [200, 300, 400, 450]
           )
         }
       }

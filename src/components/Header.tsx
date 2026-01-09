@@ -22,6 +22,11 @@ const Header: React.FC<HeaderProps> = ({
             loading="eager"
           />
         </Link>
+        <nav className={styles.desktopNav} aria-label="Main navigation">
+          <Link to="/about" className={styles.desktopNavLink}>
+            about
+          </Link>
+        </nav>
         <button
           className={styles.menuButton}
           onClick={onMenuToggle}

@@ -32,6 +32,21 @@
   width: auto;
 }
 
+/* Desktop navigation - hidden on mobile */
+.desktopNav {
+  display: none;
+}
+
+.desktopNavLink {
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  transition: color var(--transition-fast);
+}
+
+.desktopNavLink:hover {
+  color: var(--color-text-light);
+}
+
 .menuButton {
   display: flex;
   align-items: center;
@@ -75,4 +90,15 @@
 
 .hamburgerOpen .hamburgerLine:nth-child(3) {
   transform: translateY(-7px) rotate(-45deg);
+}
+
+/* Desktop: show nav link, hide hamburger */
+@media (min-width: 768px) {
+  .desktopNav {
+    display: flex;
+  }
+
+  .menuButton {
+    display: none;
+  }
 }
