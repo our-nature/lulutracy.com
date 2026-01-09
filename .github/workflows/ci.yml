@@ -22,96 +22,74 @@ env:
   NODE_VERSION: '20'
 
 jobs:
-  # Fast checks - lint, format, typecheck combined into one job
-  # This avoids running npm ci 3 separate times for fast operations
-  checks:
-    name: Lint, Format & Typecheck
+  # Single job approach - faster for small/medium projects
+  # Avoids: 3x job startup overhead (~30s), 3x npm ci (~60s), artifact transfer
+  ci:
+    name: CI
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      # Cache node_modules directly - much faster than npm cache alone
+      # npm ci with warm cache: ~25s, cached node_modules restore: ~5s
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run TypeScript type check
-        run: npm run typecheck
-
-      - name: Run ESLint
-        run: npm run lint
-
-      - name: Check formatting
-        run: npm run format:check
-
-  # Tests run in parallel with checks
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
 
       - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
 
-      - name: Run tests with coverage
+      # Run lint, format, typecheck in parallel (all are fast, read-only)
+      - name: Lint, Format & Typecheck
+        run: |
+          npm run typecheck &
+          npm run lint &
+          npm run format:check &
+          wait
+
+      - name: Test
         run: npm run test -- --coverage --ci
 
-      - name: Upload coverage reports
+      - name: Upload coverage
         uses: codecov/codecov-action@v4
         if: always()
         with:
           files: ./coverage/lcov.info
           fail_ci_if_error: false
 
-  # Build only runs after checks and tests pass
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    needs: [checks, test]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-
+      # Cache Gatsby build artifacts for faster incremental builds
       - name: Cache Gatsby
         uses: actions/cache@v4
         with:
           path: |
             .cache
             public
-          key: gatsby-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('content/**', 'src/**', 'gatsby-*.js') }}
+          key: gatsby-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('gatsby-config.js', 'gatsby-node.js') }}-${{ hashFiles('content/**') }}-${{ hashFiles('src/**') }}
           restore-keys: |
-            gatsby-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-
+            gatsby-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('gatsby-config.js', 'gatsby-node.js') }}-${{ hashFiles('content/**') }}-
+            gatsby-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('gatsby-config.js', 'gatsby-node.js') }}-
+            gatsby-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
             gatsby-${{ runner.os }}-
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build site
+      - name: Build
         run: npm run build
         env:
           PREFIX_PATHS: 'true'
-          # Gatsby build optimizations
-          GATSBY_CPU_COUNT: 2
+          # Gatsby optimizations
+          GATSBY_CPU_COUNT: 4
           NODE_OPTIONS: '--max-old-space-size=4096'
+          # Enable Gatsby's experimental incremental builds
+          GATSBY_EXPERIMENTAL_PAGE_BUILD_ON_DATA_CHANGES: 'true'
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
