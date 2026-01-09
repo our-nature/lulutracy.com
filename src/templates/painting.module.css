@@ -52,6 +52,7 @@
   font-weight: var(--font-weight-normal);
   margin-bottom: var(--spacing-md);
   color: var(--color-text);
+  text-transform: uppercase;
 }
 
 .info {
