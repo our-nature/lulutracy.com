@@ -1,0 +1,49 @@
+# Dependabot configuration
+# Keeps dependencies up to date automatically
+# https://docs.github.com/en/code-security/dependabot
+
+version: 2
+updates:
+  # npm dependencies
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '09:00'
+      timezone: America/New_York
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'deps'
+    labels:
+      - dependencies
+    # Group minor/patch updates to reduce PR noise
+    groups:
+      gatsby:
+        patterns:
+          - 'gatsby*'
+      testing:
+        patterns:
+          - 'jest*'
+          - '@testing-library/*'
+          - 'ts-jest'
+      linting:
+        patterns:
+          - 'eslint*'
+          - '@typescript-eslint/*'
+          - 'prettier'
+      types:
+        patterns:
+          - '@types/*'
+
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: 'ci'
+    labels:
+      - ci
+      - dependencies
