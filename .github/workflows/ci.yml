@@ -2,119 +2,96 @@ name: CI
 
 on:
   push:
-    branches: [main, 'claude/**']
-  pull_request:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - '.github/plans/**'
+      - 'LICENSE'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - '.github/plans/**'
+      - 'LICENSE'
   workflow_dispatch:
 
+concurrency:
+  group: ci-${{ github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  NODE_VERSION: '20'
+
 jobs:
-  lint:
-    name: Lint
+  # Single job approach - faster for small/medium projects
+  # Avoids: 3x job startup overhead (~30s), 3x npm ci (~60s), artifact transfer
+  ci:
+    name: CI
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      # Cache node_modules directly - much faster than npm cache alone
+      # npm ci with warm cache: ~25s, cached node_modules restore: ~5s
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: npm
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
 
-      - name: Run ESLint
-        run: npm run lint
+      # Run lint, format, typecheck in parallel (all are fast, read-only)
+      - name: Lint, Format & Typecheck
+        run: |
+          npm run typecheck &
+          npm run lint &
+          npm run format:check &
+          wait
 
-  format:
-    name: Format
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Check formatting
-        run: npm run format:check
-
-  typecheck:
-    name: Type Check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run TypeScript type check
-        run: npm run typecheck
-
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests
+      - name: Test
         run: npm run test -- --coverage --ci
 
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v3
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
         if: always()
         with:
           files: ./coverage/lcov.info
           fail_ci_if_error: false
 
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    needs: [lint, format, typecheck, test]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      # Cache Gatsby build artifacts for faster incremental builds
+      - name: Cache Gatsby
+        uses: actions/cache@v4
         with:
-          node-version: '20'
-          cache: npm
+          path: |
+            .cache
+            public
+          key: gatsby-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('gatsby-config.js', 'gatsby-node.js') }}-${{ hashFiles('content/**') }}-${{ hashFiles('src/**') }}
+          restore-keys: |
+            gatsby-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('gatsby-config.js', 'gatsby-node.js') }}-${{ hashFiles('content/**') }}-
+            gatsby-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('gatsby-config.js', 'gatsby-node.js') }}-
+            gatsby-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+            gatsby-${{ runner.os }}-
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Rebuild sharp for linux
-        run: npm rebuild sharp
-
-      - name: Build site
+      - name: Build
         run: npm run build
         env:
           PREFIX_PATHS: 'true'
+          GATSBY_CPU_COUNT: 4
+          NODE_OPTIONS: '--max-old-space-size=4096'
+          GATSBY_EXPERIMENTAL_PAGE_BUILD_ON_DATA_CHANGES: 'true'
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -122,3 +99,68 @@ jobs:
           name: build
           path: ./public
           retention-days: 1
+
+  # Lighthouse runs after CI, reuses build artifact (no duplicate build)
+  # Only runs on PRs - not needed for direct pushes to main
+  lighthouse:
+    name: Lighthouse
+    runs-on: ubuntu-latest
+    needs: ci
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+          path: ./public
+
+      - name: Run Lighthouse
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          configPath: ./lighthouserc.js
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+      - name: Post Lighthouse scores
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const results = JSON.parse(fs.readFileSync('.lighthouseci/manifest.json'));
+
+            // Aggregate scores by URL (average of multiple runs)
+            const scores = {};
+            for (const result of results) {
+              const summary = JSON.parse(fs.readFileSync(result.jsonPath));
+              const url = new URL(summary.finalUrl).pathname.replace(/index\.html$/, '') || '/';
+
+              if (!scores[url]) {
+                scores[url] = { perf: [], a11y: [], bp: [], seo: [] };
+              }
+              scores[url].perf.push(summary.categories.performance.score * 100);
+              scores[url].a11y.push(summary.categories.accessibility.score * 100);
+              scores[url].bp.push(summary.categories['best-practices'].score * 100);
+              scores[url].seo.push(summary.categories.seo.score * 100);
+            }
+
+            const avg = arr => Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+            const getEmoji = score => score >= 90 ? '🟢' : score >= 50 ? '🟡' : '🔴';
+
+            let comment = '## Lighthouse Results\n\n';
+            comment += '| Page | Performance | Accessibility | Best Practices | SEO |\n';
+            comment += '|------|-------------|---------------|----------------|-----|\n';
+
+            for (const [url, s] of Object.entries(scores)) {
+              const perf = avg(s.perf), a11y = avg(s.a11y), bp = avg(s.bp), seo = avg(s.seo);
+              comment += `| ${url} | ${getEmoji(perf)} ${perf} | ${getEmoji(a11y)} ${a11y} | ${getEmoji(bp)} ${bp} | ${getEmoji(seo)} ${seo} |\n`;
+            }
+
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });

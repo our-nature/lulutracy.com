@@ -1,0 +1,52 @@
+{
+  // Editor settings
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "editor.tabSize": 2,
+
+  // File associations
+  "files.associations": {
+    "*.css": "css"
+  },
+
+  // TypeScript
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.suggest.autoImports": true,
+
+  // ESLint
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+
+  // Prettier
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // Search exclusions
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/public": true,
+    "**/.cache": true,
+    "**/coverage": true
+  },
+
+  // File exclusions from explorer
+  "files.exclude": {
+    "**/.cache": true,
+    "**/public": true
+  }
+}

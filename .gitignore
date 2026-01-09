@@ -7,11 +7,20 @@ public/
 
 # Environment files
 .env
-.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+# Keep .env.example for documentation
+!.env.example
 
 # IDE
 .idea/
-.vscode/
+.vscode/*
+# Keep shared VS Code settings
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
 *.swp
 *.swo
 *~

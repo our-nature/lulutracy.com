@@ -2,8 +2,11 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - '.github/plans/**'
+      - 'LICENSE'
   workflow_dispatch:
 
 permissions:
@@ -12,101 +15,33 @@ permissions:
   id-token: write
 
 concurrency:
-  group: 'pages'
+  group: pages
   cancel-in-progress: false
 
+env:
+  NODE_VERSION: '20'
+
 jobs:
-  # Run all checks before deployment
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run ESLint
-        run: npm run lint
-
-  format:
-    name: Format Check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Check formatting
-        run: npm run format:check
-
-  typecheck:
-    name: Type Check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run TypeScript type check
-        run: npm run typecheck
-
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests
-        run: npm run test -- --coverage --ci
-
-  # Build only after all checks pass
+  # Combined CI + Build job - eliminates redundant npm ci calls and job overhead
   build:
-    name: Build
+    name: Build & Test
     runs-on: ubuntu-latest
-    needs: [lint, format, typecheck, test]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      # Cache node_modules directly - skip npm ci on cache hit
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: npm
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -114,22 +49,47 @@ jobs:
           static_site_generator: gatsby
 
       - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
 
-      - name: Rebuild sharp for linux
-        run: npm rebuild sharp
+      # Run all checks in parallel
+      - name: Lint, Format & Typecheck
+        run: |
+          npm run typecheck &
+          npm run lint &
+          npm run format:check &
+          wait
 
-      - name: Build with Gatsby
+      - name: Test
+        run: npm run test -- --coverage --ci
+
+      # Cache Gatsby build for incremental builds
+      - name: Cache Gatsby
+        uses: actions/cache@v4
+        with:
+          path: |
+            .cache
+            public
+          key: gatsby-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('gatsby-config.js', 'gatsby-node.js') }}-${{ hashFiles('content/**') }}-${{ hashFiles('src/**') }}
+          restore-keys: |
+            gatsby-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('gatsby-config.js', 'gatsby-node.js') }}-${{ hashFiles('content/**') }}-
+            gatsby-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('gatsby-config.js', 'gatsby-node.js') }}-
+            gatsby-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+            gatsby-${{ runner.os }}-
+
+      - name: Build
         run: npm run build
         env:
           PREFIX_PATHS: 'true'
+          GATSBY_CPU_COUNT: 4
+          NODE_OPTIONS: '--max-old-space-size=4096'
+          GATSBY_EXPERIMENTAL_PAGE_BUILD_ON_DATA_CHANGES: 'true'
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./public
 
-  # Deploy only after successful build
   deploy:
     name: Deploy
     environment:

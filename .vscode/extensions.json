@@ -1,0 +1,28 @@
+{
+  "recommendations": [
+    // Essential
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+
+    // TypeScript/React
+    "ms-vscode.vscode-typescript-next",
+    "dsznajder.es7-react-js-snippets",
+
+    // CSS
+    "stylelint.vscode-stylelint",
+
+    // Git
+    "eamodio.gitlens",
+    "mhutchie.git-graph",
+
+    // Utilities
+    "editorconfig.editorconfig",
+    "christian-kohler.path-intellisense",
+    "streetsidesoftware.code-spell-checker",
+
+    // GraphQL (for Gatsby)
+    "graphql.vscode-graphql",
+    "graphql.vscode-graphql-syntax"
+  ],
+  "unwantedRecommendations": []
+}
