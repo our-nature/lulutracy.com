@@ -8,7 +8,7 @@ module.exports = {
     author: `Lulu Tracy`,
     siteUrl: `https://alexnodeland.github.io/lulutracy.com`,
   },
-  pathPrefix: `/lulutracy.com`,
+  pathPrefix: process.env.PREFIX_PATHS === 'true' ? `/lulutracy.com` : ``,
   plugins: [
     `gatsby-plugin-sitemap`,
     `gatsby-plugin-image`,

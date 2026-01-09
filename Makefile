@@ -1,7 +1,7 @@
 # Makefile for lulutracy.com
 # Provides common commands for development, testing, and CI
 
-.PHONY: help install dev build serve clean test test-watch test-coverage \
+.PHONY: help install dev build build-prod serve serve-prod clean test test-watch test-coverage \
         lint lint-fix format format-check typecheck validate ci ci-fast \
         prepare hooks-install
 
@@ -48,13 +48,19 @@ dev: ## Start development server with hot reload
 
 start: dev ## Alias for dev
 
-build: ## Build production site
+build: ## Build site for local testing
 	npm run build
+
+build-prod: ## Build site for GitHub Pages (with path prefix)
+	npm run build:prod
 
 build-clean: clean build ## Clean and build
 
-serve: ## Serve production build locally
+serve: ## Serve build locally at http://localhost:9000
 	npm run serve
+
+serve-prod: ## Serve prod build locally at http://localhost:9000/lulutracy.com
+	npm run serve:prod
 
 clean: ## Clean Gatsby cache and build artifacts
 	npm run clean
