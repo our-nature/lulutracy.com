@@ -51,15 +51,27 @@ const AboutPage: React.FC<PageProps<AboutPageData>> = ({ data }) => {
 
 export default AboutPage
 
-export const Head: HeadFC = () => (
-  <>
-    <title>About | Lulu Tracy</title>
-    <meta
-      name="description"
-      content="Learn about Lulu Tracy - an artist exploring nature through watercolors and acrylics"
-    />
-  </>
-)
+const SITE_URL = 'https://alexnodeland.github.io/lulutracy.com'
+
+export const Head: HeadFC = () => {
+  const description =
+    'Learn about Lulu Tracy - an artist exploring nature through watercolors and acrylics'
+
+  return (
+    <>
+      <title>About | Lulu Tracy</title>
+      <meta name="description" content={description} />
+
+      {/* Open Graph meta tags */}
+      <meta property="og:title" content="About | Lulu Tracy" />
+      <meta property="og:description" content={description} />
+      <meta property="og:url" content={`${SITE_URL}/about`} />
+      <meta property="og:type" content="website" />
+      <meta property="og:site_name" content="Lulu Tracy" />
+      <meta property="og:locale" content="en_US" />
+    </>
+  )
+}
 
 export const query = graphql`
   query AboutPage {

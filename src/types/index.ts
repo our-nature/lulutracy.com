@@ -29,6 +29,7 @@ export interface NavigationItem {
 // Component props types
 export interface HeaderProps {
   onMenuToggle: () => void
+  isMenuOpen?: boolean
 }
 
 export interface NavigationProps {

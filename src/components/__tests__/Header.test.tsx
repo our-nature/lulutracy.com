@@ -36,4 +36,18 @@ describe('Header', () => {
     const logoLink = screen.getByLabelText('Lulu Tracy - Home')
     expect(logoLink).toHaveAttribute('href', '/')
   })
+
+  it('renders with menu closed by default', () => {
+    render(<Header onMenuToggle={mockOnMenuToggle} />)
+    expect(
+      screen.getByRole('button', { name: /toggle navigation menu/i })
+    ).toBeInTheDocument()
+  })
+
+  it('renders with menu open state', () => {
+    render(<Header onMenuToggle={mockOnMenuToggle} isMenuOpen={true} />)
+    expect(
+      screen.getByRole('button', { name: /toggle navigation menu/i })
+    ).toBeInTheDocument()
+  })
 })

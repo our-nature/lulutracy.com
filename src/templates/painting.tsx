@@ -96,14 +96,51 @@ const PaintingTemplate: React.FC<
 
 export default PaintingTemplate
 
+const SITE_URL = 'https://alexnodeland.github.io/lulutracy.com'
+
 export const Head: HeadFC<PaintingPageData, PaintingPageContext> = ({
   pageContext,
+  data,
 }) => {
   const { painting } = pageContext
+
+  // Get image URL for OG image
+  const imageData = data.file?.childImageSharp?.gatsbyImageData
+  const ogImage = imageData?.images?.fallback?.src
+    ? `${SITE_URL}${imageData.images.fallback.src}`
+    : `${SITE_URL}/icon.png`
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'VisualArtwork',
+    name: painting.title,
+    description: painting.description,
+    image: ogImage,
+    dateCreated: painting.year,
+    artMedium: painting.medium,
+    width: painting.dimensions,
+    creator: {
+      '@type': 'Person',
+      name: 'Lulu Tracy',
+    },
+  }
+
   return (
     <>
       <title>{painting.title} | Lulu Tracy</title>
       <meta name="description" content={painting.description} />
+
+      {/* Open Graph meta tags */}
+      <meta property="og:title" content={`${painting.title} | Lulu Tracy`} />
+      <meta property="og:description" content={painting.description} />
+      <meta property="og:url" content={`${SITE_URL}/painting/${painting.id}`} />
+      <meta property="og:image" content={ogImage} />
+      <meta property="og:type" content="article" />
+      <meta property="og:site_name" content="Lulu Tracy" />
+      <meta property="og:locale" content="en_US" />
+
+      {/* JSON-LD structured data */}
+      <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
     </>
   )
 }
