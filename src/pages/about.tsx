@@ -28,7 +28,7 @@ const AboutPage: React.FC<PageProps<AboutPageData>> = ({ data }) => {
             className={styles.photo}
             placeholder="blurred"
             layout="constrained"
-            width={300}
+            width={500}
           />
         </div>
         <div className={styles.content}>

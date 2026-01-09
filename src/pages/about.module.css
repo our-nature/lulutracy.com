@@ -12,6 +12,25 @@
   max-width: 300px;
 }
 
+/* Desktop: Two-column layout */
+@media (min-width: 768px) {
+  .about {
+    display: grid;
+    grid-template-columns: 45% 1fr;
+    gap: var(--spacing-2xl);
+    align-items: start;
+    max-width: 1000px;
+  }
+
+  .photoContainer {
+    margin-bottom: 0;
+  }
+
+  .photo {
+    max-width: 100%;
+  }
+}
+
 .content {
   max-width: 100%;
 }
