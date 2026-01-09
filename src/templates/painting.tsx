@@ -98,7 +98,7 @@ const PaintingTemplate: React.FC<
           <span className={styles.category}>PAINTING</span>
           <h1 className={styles.title}>{painting.title}</h1>
           <p className={styles.info}>
-            Size: {painting.dimensions} |{' '}
+            Artwork Size: {painting.dimensions} |{' '}
             {painting.substrate.charAt(0).toUpperCase() +
               painting.substrate.slice(1)}{' '}
             Size: {painting.substrateSize} | Medium:{' '}
