@@ -14,6 +14,8 @@ interface GlassMagnifierProps {
   zoomFactor?: number
   /** Enable touch support on mobile (default: true) */
   enableTouch?: boolean
+  /** Callback when image fails to load */
+  onError?: () => void
 }
 
 const GlassMagnifier: React.FC<GlassMagnifierProps> = ({
@@ -23,6 +25,7 @@ const GlassMagnifier: React.FC<GlassMagnifierProps> = ({
   className = '',
   zoomFactor = 2,
   enableTouch = true,
+  onError,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const imageRef = useRef<HTMLImageElement>(null)
@@ -87,6 +90,13 @@ const GlassMagnifier: React.FC<GlassMagnifierProps> = ({
     setIsLoaded(true)
   }, [])
 
+  // Handle image error
+  const handleImageError = useCallback(() => {
+    if (onError) {
+      onError()
+    }
+  }, [onError])
+
   // Initialize Drift after image loads and when mobile state changes
   useEffect(() => {
     if (isLoaded) {
@@ -128,6 +138,7 @@ const GlassMagnifier: React.FC<GlassMagnifierProps> = ({
         alt={alt}
         className={styles.image}
         onLoad={handleImageLoad}
+        onError={handleImageError}
       />
       {/* Zoom icon indicator */}
       <div className={styles.zoomIndicator} aria-hidden="true">
