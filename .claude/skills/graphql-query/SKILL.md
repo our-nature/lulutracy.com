@@ -26,7 +26,7 @@ This site has these data sources configured in `gatsby-config.js`:
 | `content/paintings/index.yaml` | Painting metadata | `allPaintingsYaml`   |
 | `content/paintings/images/`    | Painting images   | `allFile` (filtered) |
 | `content/about.md`             | About page        | `markdownRemark`     |
-| `content/site.yaml`            | Site config       | `siteYaml`           |
+| `content/site/index.yaml`      | Site config       | `allSiteYaml`        |
 | `src/images/`                  | Static images     | `allFile`            |
 
 ## Common Queries
