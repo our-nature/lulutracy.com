@@ -1,0 +1,8 @@
+.pageTransition {
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.visible {
+  opacity: 1;
+}

@@ -42,6 +42,13 @@ export interface LayoutProps {
   children: React.ReactNode
 }
 
+export interface PageTransitionProps {
+  children: React.ReactNode
+  location: {
+    pathname: string
+  }
+}
+
 export interface GalleryImageProps {
   painting: Painting
   image: any // Gatsby image data

@@ -1,5 +1,6 @@
 import React from 'react'
-import { GatsbySSR } from 'gatsby'
+import type { GatsbySSR } from 'gatsby'
+import PageTransition from './src/components/PageTransition'
 
 export const onRenderBody: GatsbySSR['onRenderBody'] = ({
   setHeadComponents,
@@ -22,4 +23,11 @@ export const onRenderBody: GatsbySSR['onRenderBody'] = ({
       href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap"
     />,
   ])
+}
+
+export const wrapPageElement: GatsbySSR['wrapPageElement'] = ({
+  element,
+  props,
+}) => {
+  return <PageTransition location={props.location}>{element}</PageTransition>
 }
