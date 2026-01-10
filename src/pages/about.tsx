@@ -1,6 +1,6 @@
 import React from 'react'
 import { graphql, PageProps, HeadFC } from 'gatsby'
-import { StaticImage } from 'gatsby-plugin-image'
+import { GatsbyImage, getImage, IGatsbyImageData } from 'gatsby-plugin-image'
 import Layout from '../components/Layout'
 import * as styles from './about.module.css'
 
@@ -9,7 +9,11 @@ interface AboutPageData {
     frontmatter: {
       title: string
       artistName: string
-      photo: string
+      photo: {
+        childImageSharp: {
+          gatsbyImageData: IGatsbyImageData
+        }
+      } | null
     }
     html: string
   }
@@ -25,19 +29,23 @@ interface AboutPageData {
 
 const AboutPage: React.FC<PageProps<AboutPageData>> = ({ data }) => {
   const { frontmatter, html } = data.markdownRemark
+  const image = frontmatter.photo?.childImageSharp
+    ? getImage(frontmatter.photo.childImageSharp.gatsbyImageData)
+    : null
 
   return (
     <Layout>
       <div className={styles.about}>
         <div className={styles.photoContainer}>
-          <StaticImage
-            src="../images/about.jpeg"
-            alt="Lulu Tracy"
-            className={styles.photo}
-            placeholder="blurred"
-            layout="constrained"
-            width={500}
-          />
+          {image ? (
+            <GatsbyImage
+              image={image}
+              alt="Lulu Tracy"
+              className={styles.photo}
+            />
+          ) : (
+            <div className={styles.placeholder}>Photo not available</div>
+          )}
         </div>
         <div className={styles.content}>
           <h1 className={styles.artistName}>{frontmatter.artistName}</h1>
@@ -94,7 +102,16 @@ export const query = graphql`
       frontmatter {
         title
         artistName
-        photo
+        photo {
+          childImageSharp {
+            gatsbyImageData(
+              width: 500
+              placeholder: BLURRED
+              formats: [AUTO, WEBP, AVIF]
+              quality: 85
+            )
+          }
+        }
       }
       html
     }

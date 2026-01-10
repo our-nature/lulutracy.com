@@ -18,7 +18,20 @@ const mockData = {
     frontmatter: {
       title: 'About',
       artistName: ';-)',
-      photo: 'about.jpeg',
+      photo: {
+        childImageSharp: {
+          gatsbyImageData: {
+            layout: 'constrained' as const,
+            width: 500,
+            height: 500,
+            images: {
+              fallback: {
+                src: '/static/about.jpg',
+              },
+            },
+          },
+        },
+      },
     },
     html: '<p>This is the artist biography.</p><p>More content here.</p>',
   },
@@ -60,6 +73,21 @@ describe('AboutPage', () => {
     const images = screen.getAllByRole('img', { name: /lulu tracy/i })
     // Should have at least one image (logo in header and about photo)
     expect(images.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('renders placeholder when image is not available', () => {
+    const dataWithoutImage = {
+      ...mockData,
+      markdownRemark: {
+        ...mockData.markdownRemark,
+        frontmatter: {
+          ...mockData.markdownRemark.frontmatter,
+          photo: null,
+        },
+      },
+    }
+    render(<AboutPage data={dataWithoutImage} {...({} as any)} />)
+    expect(screen.getByText(/photo not available/i)).toBeInTheDocument()
   })
 })
 
