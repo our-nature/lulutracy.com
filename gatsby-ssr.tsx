@@ -1,5 +1,6 @@
 import React from 'react'
-import { GatsbySSR } from 'gatsby'
+import type { GatsbySSR } from 'gatsby'
+import { LocationProvider } from './src/components/LocationContext'
 
 export const onRenderBody: GatsbySSR['onRenderBody'] = ({
   setHeadComponents,
@@ -22,4 +23,13 @@ export const onRenderBody: GatsbySSR['onRenderBody'] = ({
       href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap"
     />,
   ])
+}
+
+export const wrapPageElement: GatsbySSR['wrapPageElement'] = ({
+  element,
+  props,
+}) => {
+  return (
+    <LocationProvider location={props.location}>{element}</LocationProvider>
+  )
 }
