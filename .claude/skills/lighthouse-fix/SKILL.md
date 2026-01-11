@@ -1,6 +1,7 @@
 ---
 name: lighthouse-fix
 description: Diagnose and fix Lighthouse audit failures for performance, accessibility, SEO, and best practices. Use this skill when CI reports low Lighthouse scores or when optimizing the site's Core Web Vitals.
+allowed-tools: Read, Write, Edit, Bash(make build), Bash(make serve), Bash(npx lighthouse:*)
 ---
 
 # Lighthouse Performance Optimization
@@ -76,7 +77,7 @@ return <GatsbyImage image={image} alt="description" loading="eager" />
 <GatsbyImage image={image} alt="Watercolor painting of autumn leaves" />
 ```
 
-For paintings, alt text comes from `content/paintings/index.yaml`.
+For paintings, alt text comes from `content/paintings/paintings.yaml`.
 
 ### Color Contrast
 
@@ -95,6 +96,8 @@ For paintings, alt text comes from `content/paintings/index.yaml`.
   background: #fff;
 }
 ```
+
+**Note**: This site has dark mode support. Ensure contrast ratios are met in both light and dark themes. CSS variables for colors are defined in `src/styles/global.css` under `:root` and `[data-theme="dark"]` selectors.
 
 ### Missing Labels
 
