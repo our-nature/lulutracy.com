@@ -75,23 +75,110 @@ render(<PageComponent data={mockData} />)
 ### Painting Entry Format
 
 ```yaml
-- id: kebab-case-unique-id
-  title: Title Case Title
+# content/paintings/paintings.yaml
+- title: Title Case Title
   description: Full description text
-  dimensions: 'W" x H"'
-  canvasSize: WxH
-  medium: Medium description
+  dimensions:
+    width: 40.6
+    height: 50.8
+    unit: cm
+  substrate: canvas
+  substrateSize:
+    width: 40.6
+    height: 50.8
+    unit: cm
+  medium: acrylic
   year: 'YYYY'
-  image: ./images/filename.jpg
   alt: Descriptive alt text for accessibility
   order: 1
 ```
 
+Note: `id` and image filename are derived automatically from title (kebab-case).
+
 ### Image File Naming
 
-- Use kebab-case: `autumn-leaves.jpg`
-- Match painting id when possible
+- Use kebab-case derived from title: `night-hours.jpg`
+- Filename matches painting id automatically
 - Supported formats: jpg, png, webp
+
+## i18n Patterns
+
+### Translation File Structure
+
+```json
+// locales/{lang}/common.json
+{
+  "nav": {
+    "about": "About",
+    "home": "Home"
+  },
+  "theme": {
+    "switchToDark": "Switch to dark mode",
+    "switchToLight": "Switch to light mode"
+  }
+}
+```
+
+### Using Translations in Components
+
+```tsx
+import { useTranslation } from 'gatsby-plugin-react-i18next'
+
+const Component = () => {
+  const { t } = useTranslation()
+  return <span>{t('nav.about')}</span>
+}
+```
+
+### i18n Page Query Pattern
+
+```tsx
+export const query = graphql`
+  query PageName($language: String!) {
+    locales: allLocale(filter: { language: { eq: $language } }) {
+      edges {
+        node {
+          ns
+          data
+          language
+        }
+      }
+    }
+  }
+`
+```
+
+## Theme Patterns
+
+### Using Theme Context
+
+```tsx
+import { useTheme } from '../hooks/useTheme'
+
+const Component = () => {
+  const { theme, toggleTheme } = useTheme()
+  return (
+    <button onClick={toggleTheme}>
+      {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+    </button>
+  )
+}
+```
+
+### CSS Variables for Theming
+
+```css
+/* src/styles/global.css */
+:root {
+  --color-background: #ffffff;
+  --color-text: #333333;
+}
+
+[data-theme='dark'] {
+  --color-background: #1a1a1a;
+  --color-text: #f0f0f0;
+}
+```
 
 ## Git Patterns
 

@@ -10,18 +10,23 @@ This project is maintained via **Claude Code Web** and **GitHub**. No local setu
 
 ### Add a Painting
 
-1. Upload image to `content/paintings/images/`
-2. Add entry to `content/paintings/index.yaml`:
+1. Upload image to `content/paintings/images/` (filename derived from title)
+2. Add entry to `content/paintings/paintings.yaml`:
 
 ```yaml
-- id: painting-slug
-  title: Painting Title
+- title: Painting Title
   description: Brief description
-  dimensions: '16" x 20"'
-  canvasSize: '16 x 20 in'
-  medium: Watercolor on paper
+  dimensions:
+    width: 40.6
+    height: 50.8
+    unit: cm
+  substrate: canvas
+  substrateSize:
+    width: 40.6
+    height: 50.8
+    unit: cm
+  medium: acrylic
   year: '2024'
-  image: filename.jpeg
   alt: Alt text for accessibility
   order: 10
 ```
@@ -30,8 +35,9 @@ This project is maintained via **Claude Code Web** and **GitHub**. No local setu
 
 ### Other Content
 
-- **About page**: Edit `content/about.md`
-- **Site settings**: Edit `content/site/index.yaml`
+- **About page**: Edit `content/about/{lang}.md` (en, zh, yue, ms)
+- **Site settings**: Edit `content/site/site.yaml`
+- **UI translations**: Edit `locales/{lang}/*.json`
 
 ### Code Changes
 

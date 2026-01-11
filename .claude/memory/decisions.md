@@ -44,6 +44,49 @@ This file records significant architecture and design decisions made for the Lul
 - No database required
 - gatsby-transformer-yaml handles conversion
 
+### Internationalization (i18n)
+
+**Decision**: Use gatsby-plugin-react-i18next for multi-language support.
+**Rationale**:
+
+- Supports English (en), Chinese (zh), Cantonese (yue), and Malay (ms)
+- Integrates well with Gatsby's static generation
+- JSON-based translation files are easy to maintain
+- Automatic language detection and routing
+
+**Implementation**:
+
+- UI strings in `locales/{lang}/*.json`
+- About page content in `content/about/{lang}.md`
+- Painting translations in `content/paintings/locales/{lang}/`
+
+### Dark Mode Support
+
+**Decision**: Implement dark mode using React Context and CSS variables.
+**Rationale**:
+
+- User preference for reduced eye strain
+- Modern UI expectation
+- CSS variables enable efficient theme switching without re-renders
+- Persists user preference in localStorage
+
+**Implementation**:
+
+- `ThemeContext` in `src/components/ThemeContext.tsx`
+- `useTheme` hook in `src/hooks/useTheme.ts`
+- CSS variables in `src/styles/global.css`
+- Theme toggle in header
+
+### Structured Dimensions
+
+**Decision**: Use structured objects for painting dimensions instead of strings.
+**Rationale**:
+
+- Type safety with `Dimensions` interface
+- Supports multiple units (cm, in, mm)
+- Enables programmatic formatting
+- Separates artwork dimensions from substrate size
+
 ## Code Conventions
 
 ### No Semicolons (Prettier)

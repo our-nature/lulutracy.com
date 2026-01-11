@@ -76,7 +76,7 @@ return <GatsbyImage image={image} alt="description" loading="eager" />
 <GatsbyImage image={image} alt="Watercolor painting of autumn leaves" />
 ```
 
-For paintings, alt text comes from `content/paintings/index.yaml`.
+For paintings, alt text comes from `content/paintings/paintings.yaml`.
 
 ### Color Contrast
 
@@ -95,6 +95,8 @@ For paintings, alt text comes from `content/paintings/index.yaml`.
   background: #fff;
 }
 ```
+
+**Note**: This site has dark mode support. Ensure contrast ratios are met in both light and dark themes. CSS variables for colors are defined in `src/styles/global.css` under `:root` and `[data-theme="dark"]` selectors.
 
 ### Missing Labels
 

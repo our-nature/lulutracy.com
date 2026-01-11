@@ -21,13 +21,14 @@ Use this to explore the schema and test queries.
 
 This site has these data sources configured in `gatsby-config.js`:
 
-| Source                         | Content           | GraphQL Type         |
-| ------------------------------ | ----------------- | -------------------- |
-| `content/paintings/index.yaml` | Painting metadata | `allPaintingsYaml`   |
-| `content/paintings/images/`    | Painting images   | `allFile` (filtered) |
-| `content/about.md`             | About page        | `markdownRemark`     |
-| `content/site/index.yaml`      | Site config       | `allSiteYaml`        |
-| `src/images/`                  | Static images     | `allFile`            |
+| Source                          | Content             | GraphQL Type         |
+| ------------------------------- | ------------------- | -------------------- |
+| `content/paintings/paintings.yaml` | Painting metadata | `allPaintingsYaml`   |
+| `content/paintings/images/`     | Painting images     | `allFile` (filtered) |
+| `content/about/{lang}.md`       | About pages (i18n)  | `allMarkdownRemark`  |
+| `content/site/site.yaml`        | Site config         | `siteYaml`           |
+| `locales/{lang}/*.json`         | UI translations     | `allLocale`          |
+| `src/images/`                   | Static images       | `allFile`            |
 
 ## Common Queries
 
@@ -41,11 +42,19 @@ query AllPaintings {
         id
         title
         description
-        dimensions
-        canvasSize
+        dimensions {
+          width
+          height
+          unit
+        }
+        substrate
+        substrateSize {
+          width
+          height
+          unit
+        }
         medium
         year
-        image
         alt
         order
       }
@@ -78,15 +87,19 @@ query PaintingImages {
 }
 ```
 
-### Fetch About Page
+### Fetch About Page (with i18n)
 
 ```graphql
-query AboutPage {
-  markdownRemark(fileAbsolutePath: { regex: "/about.md$/" }) {
+query AboutPage($locale: String!) {
+  markdownRemark(
+    frontmatter: { locale: { eq: $locale } }
+    fileAbsolutePath: { regex: "/content/about/" }
+  ) {
     frontmatter {
       title
       artistName
       photo
+      locale
     }
     html
   }
@@ -98,19 +111,12 @@ query AboutPage {
 ```graphql
 query SiteConfig {
   siteYaml {
-    title
-    description
-    author
-    url
-    navigation {
-      label
-      path
-    }
-    social {
-      platform
+    site {
+      name
+      author
+      email
       url
     }
-    copyright
   }
 }
 ```
@@ -122,6 +128,22 @@ query SingleImage {
   file(relativePath: { eq: "logo.png" }) {
     childImageSharp {
       gatsbyImageData(width: 200, placeholder: BLURRED)
+    }
+  }
+}
+```
+
+### Fetch Localized Strings
+
+```graphql
+query Locales($language: String!) {
+  locales: allLocale(filter: { language: { eq: $language } }) {
+    edges {
+      node {
+        ns
+        data
+        language
+      }
     }
   }
 }
@@ -148,6 +170,11 @@ export const query = graphql`
         paintings {
           id
           title
+          dimensions {
+            width
+            height
+            unit
+          }
         }
       }
     }
@@ -168,18 +195,20 @@ const Header = () => {
   const data = useStaticQuery(graphql`
     query HeaderQuery {
       siteYaml {
-        title
+        site {
+          name
+        }
       }
     }
   `)
 
-  return <h1>{data.siteYaml.title}</h1>
+  return <h1>{data.siteYaml.site.name}</h1>
 }
 ```
 
 ### Template Queries with Context
 
-Used in templates created by `gatsby-node.js`. Receives context variables.
+Used in templates created by `gatsby-node.ts`. Receives context variables.
 
 ```tsx
 // src/templates/painting.tsx
@@ -195,6 +224,11 @@ export const query = graphql`
       paintings {
         id
         title
+        dimensions {
+          width
+          height
+          unit
+        }
         # ... other fields
       }
     }
@@ -244,7 +278,7 @@ childImageSharp {
 
 1. Check exact field name in playground
 2. YAML fields become camelCase in GraphQL
-3. Nested fields need explicit selection
+3. Nested fields (like `dimensions`) need explicit selection of child fields
 
 ### Image Not Processing
 
@@ -264,8 +298,12 @@ export const query = graphql`
         paintings {
           id
           title
-          image
           alt
+          dimensions {
+            width
+            height
+            unit
+          }
           # ... other fields
         }
       }
@@ -281,10 +319,13 @@ export const query = graphql`
   }
 `
 
-// Then match by filename:
+// Image filename is derived from painting title (kebab-case)
+// e.g., "Night Hours" → "night-hours.jpg"
 const getImageForPainting = (painting, imageNodes) => {
-  const imagePath = painting.image.replace('./images/', '')
-  return imageNodes.find((node) => node.relativePath === imagePath)
+  const expectedFilename = painting.id // id is kebab-case of title
+  return imageNodes.find((node) =>
+    node.relativePath.startsWith(expectedFilename)
+  )
 }
 ```
 
@@ -303,4 +344,35 @@ Run this in GraphQL playground to see full schema:
     }
   }
 }
+```
+
+## i18n Query Patterns
+
+For pages with i18n support, use the language from page context:
+
+```tsx
+export const query = graphql`
+  query AboutPage($language: String!) {
+    locales: allLocale(filter: { language: { eq: $language } }) {
+      edges {
+        node {
+          ns
+          data
+          language
+        }
+      }
+    }
+    markdownRemark(
+      frontmatter: { locale: { eq: $language } }
+      fileAbsolutePath: { regex: "/content/about/" }
+    ) {
+      frontmatter {
+        title
+        artistName
+        photo
+      }
+      html
+    }
+  }
+`
 ```

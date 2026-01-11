@@ -11,6 +11,9 @@ This document provides context and conventions for AI assistants working with th
 - Gatsby 5.13 (React static site generator)
 - React 18.2 with TypeScript 5.3 (strict mode)
 - CSS Modules for scoped styling
+- i18n with gatsby-plugin-react-i18next (English, Chinese, Cantonese, Malay)
+- Dark mode support with ThemeContext
+- drift-zoom for image magnification
 - Jest + Testing Library for tests
 - GitHub Pages deployment
 
@@ -37,21 +40,32 @@ src/
 ├── pages/           # Auto-routed Gatsby pages (index, about, 404)
 │   └── __tests__/   # Page tests
 ├── templates/       # Dynamic page templates (painting detail)
-├── styles/          # Global CSS
+├── styles/          # Global CSS (includes dark mode variables)
 ├── types/           # TypeScript interfaces
-├── hooks/           # Custom React hooks (placeholder)
-└── utils/           # Utility functions (placeholder)
+├── hooks/           # Custom React hooks (useTheme)
+└── utils/           # Utility functions (slug generation)
 
 content/
 ├── paintings/
-│   ├── index.yaml   # Painting metadata (id, title, description, etc.)
-│   └── images/      # Painting image files
-├── about.md         # About page content (Markdown + frontmatter)
-└── site/index.yaml  # Site configuration
+│   ├── paintings.yaml       # Painting metadata (id, title, description, etc.)
+│   ├── images/              # Painting image files
+│   └── locales/{lang}/      # Painting translations (zh, yue, ms)
+├── about/
+│   ├── en.md                # English about page
+│   ├── zh.md                # Chinese about page
+│   ├── yue.md               # Cantonese about page
+│   └── ms.md                # Malay about page
+└── site/site.yaml           # Site configuration (invariant data)
+
+locales/                     # UI translation strings
+├── en/                      # English translations
+├── zh/                      # Chinese translations
+├── yue/                     # Cantonese translations
+└── ms/                      # Malay translations
 
 Key config files:
 - gatsby-config.js   # Gatsby plugins and site metadata
-- gatsby-node.js     # Dynamic page generation for paintings
+- gatsby-node.ts     # Dynamic page generation for paintings (TypeScript)
 - tsconfig.json      # TypeScript configuration
 - jest.config.js     # Jest test configuration
 ```
@@ -112,8 +126,11 @@ const MyComponent = ({ title, onClick }: Props) => {
 
 **Mocks Available**:
 
-- `__mocks__/gatsby.js` - Gatsby APIs
-- `__mocks__/gatsby-plugin-image.js` - Image components
+- `__mocks__/gatsby.js` - Gatsby APIs (Link, graphql, navigate)
+- `__mocks__/gatsby-plugin-image.js` - Image components (GatsbyImage, StaticImage)
+- `__mocks__/gatsby-plugin-react-i18next.js` - i18n hooks (useTranslation, Trans)
+- `__mocks__/ThemeContext.tsx` - Theme context provider
+- `__mocks__/drift-zoom.js` - Image magnifier library
 - `__mocks__/styleMock.js` - CSS imports
 - `__mocks__/fileMock.js` - Static file imports
 
@@ -171,29 +188,56 @@ deps: update gatsby to v5.14
 
 ### Adding a New Painting
 
-1. Add image to `content/paintings/images/`
-2. Add entry to `content/paintings/index.yaml`:
+1. Add image to `content/paintings/images/` (filename derived from title automatically)
+2. Add entry to `content/paintings/paintings.yaml`:
 
 ```yaml
-- id: unique-slug
-  title: Painting Title
+- title: Painting Title
   description: Description text
-  dimensions: '16" x 20"'
-  canvasSize: 16x20
-  medium: Watercolor on paper
+  dimensions:
+    width: 40.6
+    height: 50.8
+    unit: cm
+  substrate: canvas
+  substrateSize:
+    width: 40.6
+    height: 50.8
+    unit: cm
+  medium: acrylic
   year: '2024'
-  image: ./images/filename.jpg
   alt: Alt text for accessibility
   order: 1 # Display order in gallery
 ```
 
+Note: The `id` and image filename are derived automatically from the title.
+
+3. (Optional) Add translations in `content/paintings/locales/{lang}/painting-locales.yaml`
+
 ### Modifying About Page
 
-Edit `content/about.md` - supports Markdown with YAML frontmatter for title, artistName, and photo path.
+Edit the appropriate language file in `content/about/`:
+- `content/about/en.md` - English
+- `content/about/zh.md` - Chinese (Simplified)
+- `content/about/yue.md` - Cantonese
+- `content/about/ms.md` - Malay
+
+Each file supports Markdown with YAML frontmatter for title, artistName, photo, and locale.
 
 ### Site Configuration
 
-Edit `content/site/index.yaml` for site-wide settings (title, navigation, social links, copyright).
+Edit `content/site/site.yaml` for invariant site data (name, author, email, url).
+
+UI strings (navigation labels, button text, etc.) are in `locales/{lang}/common.json`.
+
+### Internationalization (i18n)
+
+**Supported Languages**: English (en), Chinese (zh), Cantonese (yue), Malay (ms)
+
+**Translation Files**:
+- `locales/{lang}/common.json` - Shared UI strings
+- `locales/{lang}/about.json` - About page strings
+- `locales/{lang}/painting.json` - Painting page strings
+- `locales/{lang}/404.json` - 404 page strings
 
 ## CI/CD Pipeline
 
@@ -248,7 +292,9 @@ export const query = graphql`
 
 ### Dynamic Page Generation
 
-Pages for individual paintings are created in `gatsby-node.js` using the painting data from YAML. Route pattern: `/painting/{id}`
+Pages for individual paintings are created in `gatsby-node.ts` using the painting data from YAML. Route patterns:
+- English: `/painting/{id}`
+- Other languages: `/{lang}/painting/{id}` (e.g., `/zh/painting/symbiosis`)
 
 ## Troubleshooting
 
@@ -268,11 +314,12 @@ Pages for individual paintings are created in `gatsby-node.js` using the paintin
 
 ## Files Commonly Modified
 
-- `content/paintings/index.yaml` - Add/edit paintings
+- `content/paintings/paintings.yaml` - Add/edit paintings
+- `content/about/{lang}.md` - About page content (per language)
+- `locales/{lang}/*.json` - UI translation strings
 - `src/components/` - UI components
 - `src/pages/` - Page layouts
-- `src/styles/global.css` - Global styling
-- `content/about.md` - About page content
+- `src/styles/global.css` - Global styling (includes dark mode CSS variables)
 
 ## Claude Code Automation
 
@@ -343,13 +390,13 @@ Claude should reference these files for consistency and to avoid repeating past 
 
 ### MCP Servers
 
-Configured in `.mcp.json` (disabled by default, enable as needed):
+Configured in `.mcp.json`:
 
-| Server       | Purpose                                             |
-| ------------ | --------------------------------------------------- |
-| `filesystem` | Enhanced file operations                            |
-| `github`     | GitHub PR/issue integration (requires GITHUB_TOKEN) |
-| `fetch`      | Web fetching capabilities                           |
+| Server       | Status   | Purpose                                             |
+| ------------ | -------- | --------------------------------------------------- |
+| `filesystem` | Enabled  | Enhanced file operations                            |
+| `github`     | Disabled | GitHub PR/issue integration (requires GITHUB_TOKEN) |
+| `fetch`      | Disabled | Web fetching capabilities                           |
 
 ## Environment Requirements
 
