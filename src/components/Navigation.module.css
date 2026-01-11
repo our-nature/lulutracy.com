@@ -31,7 +31,9 @@
   transition:
     transform var(--transition-base),
     opacity var(--transition-base),
-    visibility var(--transition-base);
+    visibility var(--transition-base),
+    background-color var(--theme-transition),
+    border-color var(--theme-transition);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -57,4 +59,16 @@
 
 .navLink:hover {
   color: var(--color-text-light);
+}
+
+.settingsSection {
+  border-top: 1px solid var(--color-border);
+  padding: var(--spacing-md) var(--spacing-lg);
+  transition: border-color var(--theme-transition);
+}
+
+.settingsRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
 }
