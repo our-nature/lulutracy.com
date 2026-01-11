@@ -10,7 +10,17 @@ module.exports = {
   },
   pathPrefix: process.env.PREFIX_PATHS === 'true' ? `/lulutracy.com` : ``,
   plugins: [
-    `gatsby-plugin-sitemap`,
+    {
+      resolve: `gatsby-plugin-sitemap`,
+      options: {
+        resolveSiteUrl: () => `https://alexnodeland.github.io/lulutracy.com`,
+        serialize: ({ path }) => ({
+          url: `https://alexnodeland.github.io/lulutracy.com${path}`,
+          changefreq: `weekly`,
+          priority: path === `/` ? 1.0 : 0.7,
+        }),
+      },
+    },
     `gatsby-plugin-image`,
     `gatsby-plugin-sharp`,
     `gatsby-transformer-sharp`,
