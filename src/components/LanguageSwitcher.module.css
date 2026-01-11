@@ -13,7 +13,6 @@
   padding: 0.25rem 0.5rem;
   color: inherit;
   font-family: inherit;
-  text-transform: uppercase;
   letter-spacing: 0.05em;
   transition: opacity var(--transition-fast);
 }
