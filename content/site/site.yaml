@@ -1,19 +1,8 @@
 # Site Configuration
-# Single source of truth for invariant data + English defaults
-# Translatable fields: tagline, description, copyright, navigation.label
+# Invariant data only - translations live in locales/*/common.json
 
 site:
   name: lulutracy
-  tagline: art & design
-  title: lulutracy
-  description: Art portfolio of lulutracy - exploring nature through watercolors and acrylics
   author: Tracy Mah
   email: tracy@lulutracy.com
   url: https://alexnodeland.github.io/lulutracy.com
-  copyright: 'Copyright {year} lulutracy. All rights reserved.'
-
-navigation:
-  - label: about
-    path: /about
-
-social: []

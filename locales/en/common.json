@@ -1,8 +1,12 @@
 {
+  "site": {
+    "tagline": "art & design",
+    "description": "Art portfolio of lulutracy - exploring nature through watercolors and acrylics"
+  },
   "copyright": "Copyright {{year}} lulutracy. All rights reserved.",
   "nav": {
     "about": "about",
-    "home": "Lulu Tracy - Home"
+    "home": "lulutracy"
   },
   "toggleMenu": "Toggle navigation menu",
   "mainNavigation": "Main navigation"

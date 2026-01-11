@@ -51,20 +51,29 @@ const mockPaintings: Painting[] = [
 const mockSiteYaml = {
   site: {
     name: 'lulutracy',
-    tagline: 'art & design',
-    description:
-      'Art portfolio of Lulu Tracy - exploring nature through watercolors and acrylics',
     url: 'https://alexnodeland.github.io/lulutracy.com',
   },
 }
 
-interface SiteLocaleNode {
-  locale: string
-  site: { tagline: string; description: string }
-}
-
-const mockSiteLocales = {
-  nodes: [] as SiteLocaleNode[],
+// Mock locale data (simulates allLocale query)
+const mockLocales = {
+  edges: [
+    {
+      node: {
+        ns: 'common',
+        data: JSON.stringify({
+          site: {
+            tagline: 'art & design',
+            description:
+              'Art portfolio of Lulu Tracy - exploring nature through watercolors and acrylics',
+          },
+          nav: { about: 'about', home: 'Lulu Tracy - Home' },
+          copyright: 'Copyright {{year}} lulutracy. All rights reserved.',
+        }),
+        language: 'en',
+      },
+    },
+  ],
 }
 
 interface LocaleNode {
@@ -73,6 +82,7 @@ interface LocaleNode {
 }
 
 const mockData = {
+  locales: mockLocales,
   paintingsYaml: {
     paintings: mockPaintings,
   },
@@ -118,7 +128,6 @@ const mockData = {
     ],
   },
   siteYaml: mockSiteYaml,
-  allSiteLocaleYaml: mockSiteLocales,
 }
 
 const mockPageContext = {
@@ -160,11 +169,11 @@ describe('IndexPage', () => {
 
   it('handles empty paintings gracefully', () => {
     const emptyData = {
+      locales: mockLocales,
       paintingsYaml: { paintings: [] },
       allPaintingLocalesYaml: { nodes: [] },
       allFile: { nodes: [] },
       siteYaml: mockSiteYaml,
-      allSiteLocaleYaml: mockSiteLocales,
     }
     renderIndexPage(emptyData as any)
     expect(screen.getByRole('main')).toBeInTheDocument()
@@ -172,11 +181,11 @@ describe('IndexPage', () => {
 
   it('handles undefined paintings gracefully', () => {
     const undefinedData = {
+      locales: mockLocales,
       paintingsYaml: null,
       allPaintingLocalesYaml: { nodes: [] },
       allFile: { nodes: [] },
       siteYaml: mockSiteYaml,
-      allSiteLocaleYaml: mockSiteLocales,
     }
     renderIndexPage(undefinedData as any)
     expect(screen.getByRole('main')).toBeInTheDocument()
@@ -245,11 +254,11 @@ describe('Head', () => {
 
   it('renders with fallback image when no paintings exist', () => {
     const emptyData = {
+      locales: mockLocales,
       paintingsYaml: { paintings: [] },
       allPaintingLocalesYaml: { nodes: [] },
       allFile: { nodes: [] },
       siteYaml: mockSiteYaml,
-      allSiteLocaleYaml: mockSiteLocales,
     }
     const { container } = render(
       <Head data={emptyData as any} {...({} as any)} />
@@ -261,11 +270,11 @@ describe('Head', () => {
 
   it('renders with fallback image when paintings is undefined', () => {
     const undefinedData = {
+      locales: mockLocales,
       paintingsYaml: null,
       allPaintingLocalesYaml: { nodes: [] },
       allFile: { nodes: [] },
       siteYaml: mockSiteYaml,
-      allSiteLocaleYaml: mockSiteLocales,
     }
     const { container } = render(
       <Head data={undefinedData as any} {...({} as any)} />
@@ -300,7 +309,6 @@ describe('Head', () => {
       siteYaml: {
         site: {},
       },
-      allSiteLocaleYaml: { nodes: [] },
     }
     const { container } = render(
       <Head data={dataMissingSiteProps as any} {...({} as any)} />
@@ -308,10 +316,6 @@ describe('Head', () => {
     expect(
       container.querySelector('meta[property="og:site_name"]')
     ).toHaveAttribute('content', '')
-    expect(container.querySelector('meta[name="description"]')).toHaveAttribute(
-      'content',
-      ''
-    )
   })
 
   it('handles missing image node gracefully', () => {

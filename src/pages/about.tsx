@@ -6,6 +6,15 @@ import Layout from '../components/Layout'
 import * as styles from './about.module.css'
 
 interface AboutPageData {
+  locales: {
+    edges: Array<{
+      node: {
+        ns: string
+        data: string
+        language: string
+      }
+    }>
+  }
   markdownRemark: {
     frontmatter: {
       title: string
@@ -22,19 +31,26 @@ interface AboutPageData {
   siteYaml: {
     site: {
       name: string
-      description: string
       author: string
       email: string
       url: string
     }
   }
-  allSiteLocaleYaml: {
-    nodes: Array<{
-      locale: string
-      site: {
-        description: string
-      }
-    }>
+}
+
+// Helper to get translation from locale data
+function getTranslation(
+  locales: AboutPageData['locales'],
+  ns: string,
+  key: string
+): string | undefined {
+  const localeNode = locales?.edges?.find((edge) => edge.node.ns === ns)
+  if (!localeNode) return undefined
+  try {
+    const data = JSON.parse(localeNode.node.data)
+    return key.split('.').reduce((obj, k) => obj?.[k], data)
+  } catch {
+    return undefined
   }
 }
 
@@ -101,15 +117,15 @@ export const Head: HeadFC<AboutPageData, AboutPageContext> = ({
 }) => {
   const language = pageContext?.language || 'en'
 
-  // Get base site data and merge with locale overrides
+  // Get site data from YAML (invariant) and translations from locales
   const baseSite = data.siteYaml?.site
-  const localeOverride = data.allSiteLocaleYaml?.nodes?.find(
-    (node) => node.locale === language
-  )?.site
+  const siteDescription =
+    getTranslation(data.locales, 'common', 'site.description') ||
+    'Art portfolio of lulutracy'
   const site = baseSite
     ? {
         ...baseSite,
-        description: localeOverride?.description || baseSite.description,
+        description: siteDescription,
       }
     : null
   const markdownRemark = data.markdownRemark
@@ -131,8 +147,14 @@ export const Head: HeadFC<AboutPageData, AboutPageContext> = ({
     : `${site.url}/icon.png`
 
   // Define supported languages for hreflang
-  const languages = ['en', 'zh']
-  const ogLocale = language === 'zh' ? 'zh_CN' : 'en_US'
+  const languages = ['en', 'zh', 'yue', 'ms']
+  const ogLocaleMap: Record<string, string> = {
+    en: 'en_US',
+    zh: 'zh_CN',
+    yue: 'zh_HK',
+    ms: 'ms_MY',
+  }
+  const ogLocale = ogLocaleMap[language] || 'en_US'
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -205,18 +227,9 @@ export const query = graphql`
     siteYaml {
       site {
         name
-        description
         author
         email
         url
-      }
-    }
-    allSiteLocaleYaml {
-      nodes {
-        locale
-        site {
-          description
-        }
       }
     }
     markdownRemark(

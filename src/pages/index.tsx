@@ -28,6 +28,15 @@ interface LocaleOverride {
 }
 
 interface IndexPageData {
+  locales: {
+    edges: Array<{
+      node: {
+        ns: string
+        data: string
+        language: string
+      }
+    }>
+  }
   paintingsYaml: {
     paintings: RawPainting[]
   }
@@ -48,19 +57,25 @@ interface IndexPageData {
   siteYaml: {
     site: {
       name: string
-      tagline: string
-      description: string
       url: string
     }
   }
-  allSiteLocaleYaml: {
-    nodes: Array<{
-      locale: string
-      site: {
-        tagline: string
-        description: string
-      }
-    }>
+}
+
+// Helper to get translation from locale data
+function getTranslation(
+  locales: IndexPageData['locales'],
+  ns: string,
+  key: string
+): string | undefined {
+  const localeNode = locales?.edges?.find((edge) => edge.node.ns === ns)
+  if (!localeNode) return undefined
+  try {
+    const data = JSON.parse(localeNode.node.data)
+    // Support nested keys like "site.tagline"
+    return key.split('.').reduce((obj, k) => obj?.[k], data)
+  } catch {
+    return undefined
   }
 }
 
@@ -139,16 +154,19 @@ export const Head: HeadFC<IndexPageData, IndexPageContext> = ({
 }) => {
   const language = pageContext?.language || 'en'
 
-  // Get base site data and merge with locale overrides
+  // Get site data from YAML (invariant) and translations from locales
   const baseSite = data.siteYaml?.site
-  const localeOverride = data.allSiteLocaleYaml?.nodes?.find(
-    (node) => node.locale === language
-  )?.site
+  const tagline =
+    getTranslation(data.locales, 'common', 'site.tagline') || 'art & design'
+  const description =
+    getTranslation(data.locales, 'common', 'site.description') ||
+    'Art portfolio of lulutracy'
   const site = baseSite
     ? {
-        ...baseSite,
-        tagline: localeOverride?.tagline || baseSite.tagline,
-        description: localeOverride?.description || baseSite.description,
+        name: baseSite.name,
+        url: baseSite.url,
+        tagline,
+        description,
       }
     : null
   const siteUrl = site?.url || ''
@@ -166,8 +184,14 @@ export const Head: HeadFC<IndexPageData, IndexPageContext> = ({
     : `${siteUrl}/icon.png`
 
   // Define supported languages for hreflang
-  const languages = ['en', 'zh']
-  const ogLocale = language === 'zh' ? 'zh_CN' : 'en_US'
+  const languages = ['en', 'zh', 'yue', 'ms']
+  const ogLocaleMap: Record<string, string> = {
+    en: 'en_US',
+    zh: 'zh_CN',
+    yue: 'zh_HK',
+    ms: 'ms_MY',
+  }
+  const ogLocale = ogLocaleMap[language] || 'en_US'
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -186,7 +210,7 @@ export const Head: HeadFC<IndexPageData, IndexPageContext> = ({
       {/* Canonical URL */}
       <link
         rel="canonical"
-        href={language === 'en' ? siteUrl : `${siteUrl}/zh/`}
+        href={language === 'en' ? siteUrl : `${siteUrl}/${language}/`}
       />
 
       {/* Hreflang alternate links */}
@@ -238,18 +262,7 @@ export const query = graphql`
     siteYaml {
       site {
         name
-        tagline
-        description
         url
-      }
-    }
-    allSiteLocaleYaml {
-      nodes {
-        locale
-        site {
-          tagline
-          description
-        }
       }
     }
     paintingsYaml {

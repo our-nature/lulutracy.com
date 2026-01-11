@@ -7,7 +7,7 @@ module.exports = {
     description: `Art portfolio of Lulu Tracy - exploring nature through watercolors and acrylics`,
     author: `Lulu Tracy`,
     siteUrl: `https://alexnodeland.github.io/lulutracy.com`,
-    supportedLanguages: ['en', 'zh'],
+    supportedLanguages: ['en', 'zh', 'yue', 'ms'],
     defaultLanguage: 'en',
   },
   pathPrefix: process.env.PREFIX_PATHS === 'true' ? `/lulutracy.com` : ``,
@@ -57,14 +57,6 @@ module.exports = {
         path: `${__dirname}/content/paintings/locales`,
       },
     },
-    // Source site locale overrides (for i18n translations)
-    {
-      resolve: `gatsby-source-filesystem`,
-      options: {
-        name: `siteLocales`,
-        path: `${__dirname}/content/site/locales`,
-      },
-    },
     // Source site images (logo, about photo, etc.)
     {
       resolve: `gatsby-source-filesystem`,
@@ -98,7 +90,7 @@ module.exports = {
       resolve: `gatsby-plugin-react-i18next`,
       options: {
         localeJsonSourceName: `locale`,
-        languages: ['en', 'zh'],
+        languages: ['en', 'zh', 'yue', 'ms'],
         defaultLanguage: 'en',
         generateDefaultLanguagePages: true,
         siteUrl: `https://alexnodeland.github.io/lulutracy.com`,

@@ -5,24 +5,33 @@ import AboutPage, { Head } from '../about'
 const mockSiteYaml = {
   site: {
     name: 'lulutracy',
-    description:
-      'Art portfolio of lulutracy - exploring nature through watercolors and acrylics',
     author: 'Tracy Mah',
     email: 'tracy@lulutracy.com',
     url: 'https://alexnodeland.github.io/lulutracy.com',
   },
 }
 
-interface SiteLocaleNode {
-  locale: string
-  site: { description: string }
-}
-
-const mockSiteLocales = {
-  nodes: [] as SiteLocaleNode[],
+// Mock locale data (simulates allLocale query)
+const mockLocales = {
+  edges: [
+    {
+      node: {
+        ns: 'common',
+        data: JSON.stringify({
+          site: {
+            tagline: 'art & design',
+            description:
+              'Art portfolio of lulutracy - exploring nature through watercolors and acrylics',
+          },
+        }),
+        language: 'en',
+      },
+    },
+  ],
 }
 
 const mockData = {
+  locales: mockLocales,
   markdownRemark: {
     frontmatter: {
       title: 'About',
@@ -46,7 +55,6 @@ const mockData = {
     excerpt: 'This is the artist biography. More content here.',
   },
   siteYaml: mockSiteYaml,
-  allSiteLocaleYaml: mockSiteLocales,
 }
 
 // Cast to any to bypass Gatsby PageProps typing in tests
@@ -111,16 +119,22 @@ describe('AboutPage', () => {
   })
 
   it('uses locale override for Chinese language', () => {
+    const zhLocales = {
+      edges: [
+        {
+          node: {
+            ns: 'common',
+            data: JSON.stringify({
+              site: { tagline: '艺术与设计', description: '中文描述' },
+            }),
+            language: 'zh',
+          },
+        },
+      ],
+    }
     const dataWithZhOverride = {
       ...mockData,
-      allSiteLocaleYaml: {
-        nodes: [
-          {
-            locale: 'zh',
-            site: { description: '中文描述' },
-          },
-        ],
-      },
+      locales: zhLocales,
     }
     render(<AboutPage data={dataWithZhOverride} {...({} as any)} />)
     expect(screen.getByRole('main')).toBeInTheDocument()
@@ -179,16 +193,22 @@ describe('Head', () => {
   })
 
   it('uses locale override for Chinese description in Head', () => {
+    const zhLocales = {
+      edges: [
+        {
+          node: {
+            ns: 'common',
+            data: JSON.stringify({
+              site: { tagline: '艺术与设计', description: '中文描述' },
+            }),
+            language: 'zh',
+          },
+        },
+      ],
+    }
     const dataWithZhOverride = {
       ...mockData,
-      allSiteLocaleYaml: {
-        nodes: [
-          {
-            locale: 'zh',
-            site: { description: '中文描述' },
-          },
-        ],
-      },
+      locales: zhLocales,
     }
     const { container } = render(
       <Head

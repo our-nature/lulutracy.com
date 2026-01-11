@@ -151,8 +151,14 @@ export const Head: HeadFC<PaintingPageData, PaintingPageContext> = ({
   const siteName = site?.name || 'lulutracy'
 
   // Define supported languages for hreflang
-  const languages = ['en', 'zh']
-  const ogLocale = currentLang === 'zh' ? 'zh_CN' : 'en_US'
+  const languages = ['en', 'zh', 'yue', 'ms']
+  const ogLocaleMap: Record<string, string> = {
+    en: 'en_US',
+    zh: 'zh_CN',
+    yue: 'zh_HK',
+    ms: 'ms_MY',
+  }
+  const ogLocale = ogLocaleMap[currentLang] || 'en_US'
   const basePath = `/painting/${painting.id}`
   const pageUrl =
     currentLang === 'en'
