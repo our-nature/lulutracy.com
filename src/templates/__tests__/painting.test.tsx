@@ -415,4 +415,112 @@ describe('Legacy string dimensions handling', () => {
     // Legacy string format should be displayed as-is
     expect(screen.getByText(/45.5 x 35.5 cm/)).toBeInTheDocument()
   })
+
+  it('handles legacy string dimensions in Head JSON-LD', () => {
+    const legacyPainting = {
+      ...mockPainting,
+      dimensions: '45.5 x 35.5 cm',
+    }
+    const legacyContext = {
+      ...mockPageContext,
+      painting: legacyPainting,
+    }
+    const { container } = render(
+      <Head
+        data={mockDataWithImage as any}
+        pageContext={legacyContext as any}
+        {...({} as any)}
+      />
+    )
+    const jsonLd = container.querySelector('script[type="application/ld+json"]')
+    const data = JSON.parse(jsonLd?.textContent || '{}')
+    expect(data.width).toBe('45.5 x 35.5 cm')
+  })
+})
+
+describe('Site data fallbacks', () => {
+  it('handles missing site URL in Head', () => {
+    const dataWithoutUrl = {
+      ...mockDataWithImage,
+      siteYaml: {
+        site: {
+          name: 'lulutracy',
+          author: 'Tracy Mah',
+        },
+      },
+    }
+    const { container } = render(
+      <Head
+        data={dataWithoutUrl as any}
+        pageContext={mockPageContext}
+        {...({} as any)}
+      />
+    )
+    expect(container.querySelector('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      '/painting/test-painting'
+    )
+  })
+
+  it('handles missing site name in Head', () => {
+    const dataWithoutName = {
+      ...mockDataWithImage,
+      siteYaml: {
+        site: {
+          url: 'https://example.com',
+          author: 'Tracy Mah',
+        },
+      },
+    }
+    const { container } = render(
+      <Head
+        data={dataWithoutName as any}
+        pageContext={mockPageContext}
+        {...({} as any)}
+      />
+    )
+    expect(container.querySelector('title')).toHaveTextContent(
+      'Test Painting Title | lulutracy'
+    )
+  })
+
+  it('handles missing author in Head', () => {
+    const dataWithoutAuthor = {
+      ...mockDataWithImage,
+      siteYaml: {
+        site: {
+          name: 'lulutracy',
+          url: 'https://example.com',
+        },
+      },
+    }
+    const { container } = render(
+      <Head
+        data={dataWithoutAuthor as any}
+        pageContext={mockPageContext}
+        {...({} as any)}
+      />
+    )
+    const jsonLd = container.querySelector('script[type="application/ld+json"]')
+    const data = JSON.parse(jsonLd?.textContent || '{}')
+    expect(data.creator.name).toBe('')
+  })
+
+  it('handles unknown language in locale map', () => {
+    const unknownLangContext = {
+      ...mockPageContext,
+      language: 'unknown',
+    }
+    const { container } = render(
+      <Head
+        data={mockDataWithImage as any}
+        pageContext={unknownLangContext as any}
+        {...({} as any)}
+      />
+    )
+    // Should fall back to en_US
+    expect(
+      container.querySelector('meta[property="og:locale"]')
+    ).toHaveAttribute('content', 'en_US')
+  })
 })

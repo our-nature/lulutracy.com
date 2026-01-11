@@ -52,4 +52,23 @@ describe('Head', () => {
       'noindex, nofollow'
     )
   })
+
+  it('falls back to default site name when missing', () => {
+    const dataWithoutSiteName = {
+      siteYaml: {
+        site: {},
+      },
+    }
+    const { container } = render(
+      <Head data={dataWithoutSiteName as any} {...({} as any)} />
+    )
+    expect(container.querySelector('title')).toHaveTextContent(
+      'Page Not Found | lulutracy'
+    )
+  })
+
+  it('falls back to default language when pageContext missing', () => {
+    const { container } = render(<Head data={mockData} {...({} as any)} />)
+    expect(container.querySelector('html')).toHaveAttribute('lang', 'en')
+  })
 })

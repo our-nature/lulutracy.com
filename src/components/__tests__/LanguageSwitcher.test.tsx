@@ -4,10 +4,13 @@ import LanguageSwitcher from '../LanguageSwitcher'
 
 // Mock the useI18next hook
 const mockChangeLanguage = jest.fn()
+const mockLanguage = 'en'
+const mockLanguages = ['en', 'zh', 'yue', 'ms']
+
 jest.mock('gatsby-plugin-react-i18next', () => ({
   useI18next: () => ({
-    languages: ['en', 'zh', 'yue', 'ms'],
-    language: 'en',
+    languages: mockLanguages,
+    language: mockLanguage,
     changeLanguage: mockChangeLanguage,
   }),
 }))
@@ -84,6 +87,36 @@ describe('LanguageSwitcher', () => {
     fireEvent.keyDown(document, { key: 'Escape' })
 
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+  })
+
+  it('closes dropdown when clicking outside', () => {
+    render(
+      <div>
+        <LanguageSwitcher />
+        <button data-testid="outside">Outside</button>
+      </div>
+    )
+    const trigger = screen.getByRole('button', { name: /en/i })
+
+    fireEvent.click(trigger)
+    expect(screen.getByRole('listbox')).toBeInTheDocument()
+
+    fireEvent.mouseDown(screen.getByTestId('outside'))
+
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+  })
+
+  it('does not close dropdown when clicking inside', () => {
+    render(<LanguageSwitcher />)
+    const trigger = screen.getByRole('button', { name: /en/i })
+
+    fireEvent.click(trigger)
+    expect(screen.getByRole('listbox')).toBeInTheDocument()
+
+    // Click inside the dropdown but not on an option
+    fireEvent.mouseDown(screen.getByRole('listbox'))
+
+    expect(screen.getByRole('listbox')).toBeInTheDocument()
   })
 
   it('has correct navigation role and label', () => {

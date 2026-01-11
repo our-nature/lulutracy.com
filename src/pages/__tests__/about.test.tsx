@@ -221,4 +221,48 @@ describe('Head', () => {
       'about | lulutracy'
     )
   })
+
+  it('handles invalid JSON in locale data gracefully', () => {
+    const dataInvalidJson = {
+      ...mockData,
+      locales: {
+        edges: [
+          {
+            node: {
+              ns: 'common',
+              data: 'invalid json {{{',
+              language: 'en',
+            },
+          },
+        ],
+      },
+    }
+    const { container } = render(
+      <Head data={dataInvalidJson as any} {...({} as any)} />
+    )
+    // Should still render, falling back to defaults
+    expect(container.querySelector('title')).toBeInTheDocument()
+  })
+
+  it('handles missing locale namespace gracefully', () => {
+    const dataMissingNs = {
+      ...mockData,
+      locales: {
+        edges: [
+          {
+            node: {
+              ns: 'other',
+              data: JSON.stringify({ key: 'value' }),
+              language: 'en',
+            },
+          },
+        ],
+      },
+    }
+    const { container } = render(
+      <Head data={dataMissingNs as any} {...({} as any)} />
+    )
+    // Should still render, falling back to defaults
+    expect(container.querySelector('title')).toBeInTheDocument()
+  })
 })
