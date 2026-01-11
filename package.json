@@ -43,6 +43,8 @@
     "gatsby-transformer-remark": "^6.13.0",
     "gatsby-transformer-sharp": "^5.13.0",
     "gatsby-transformer-yaml": "^5.13.0",
+    "js-yaml": "^4.1.1",
+    "piexifjs": "^1.0.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -53,7 +55,9 @@
     "@testing-library/jest-dom": "^6.4.0",
     "@testing-library/react": "^14.2.0",
     "@types/jest": "^29.5.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^25.0.3",
+    "@types/piexifjs": "^1.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@typescript-eslint/eslint-plugin": "^8.52.0",
