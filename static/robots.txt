@@ -1,4 +1,32 @@
+# Block AI training crawlers
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: cohere-ai
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+# Allow search engines, block non-content pages
 User-agent: *
 Allow: /
+Disallow: /404
+Disallow: /404.html
 
 Sitemap: https://alexnodeland.github.io/lulutracy.com/sitemap-index.xml
