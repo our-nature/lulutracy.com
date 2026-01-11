@@ -80,23 +80,38 @@ interface PageTransitionProps {
 
 const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
   const location = useLocation()
-  // Start visible if we're skipping the transition (e.g., language change)
-  const [isVisible, setIsVisible] = useState(() =>
-    shouldSkipInitialTransition()
-  )
+  // Check if we should skip transition on mount (e.g., language change)
+  // Use lazy initializer to only check once on mount
+  const [initialSkip] = useState(shouldSkipInitialTransition)
+  const [isVisible, setIsVisible] = useState(initialSkip)
+  // Use instant mode (no CSS transition) when skipping
+  const [isInstant, setIsInstant] = useState(initialSkip)
   const [transitionChildren, setTransitionChildren] = useState(children)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const previousPathRef = useRef(location.pathname)
   const isFirstRender = useRef(true)
+  const hasProcessedSkip = useRef(false)
 
   // Handle fade in on mount
   useEffect(() => {
+    // If we're skipping transition, we're already visible with instant mode
+    // Clear instant mode after the component has rendered
+    if (initialSkip && !hasProcessedSkip.current) {
+      hasProcessedSkip.current = true
+      // Use requestAnimationFrame to ensure the instant render happened
+      const raf = requestAnimationFrame(() => {
+        setIsInstant(false)
+      })
+      return () => cancelAnimationFrame(raf)
+    }
+
+    // Normal fade-in for fresh page loads
     const timeout = setTimeout(() => {
       setIsVisible(true)
     }, 50)
 
     return () => clearTimeout(timeout)
-  }, [])
+  }, [initialSkip])
 
   // Handle route changes
   useEffect(() => {
@@ -190,10 +205,15 @@ const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
     return () => document.removeEventListener('click', handleClick)
   }, [handleClick])
 
+  // Determine the appropriate class: instant (no transition), visible (with transition), or hidden
+  const visibilityClass = isInstant
+    ? styles.instant
+    : isVisible
+      ? styles.visible
+      : ''
+
   return (
-    <div
-      className={`${styles.pageTransition} ${isVisible ? styles.visible : ''}`}
-    >
+    <div className={`${styles.pageTransition} ${visibilityClass}`}>
       {displayChildren}
     </div>
   )
