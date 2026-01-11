@@ -80,7 +80,7 @@ Markdown content here...
 
 ## Site Configuration
 
-Edit `content/site.yaml` for:
+Edit `content/site/index.yaml` for:
 
 - Site title and description
 - Navigation items

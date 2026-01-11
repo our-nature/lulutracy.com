@@ -7,6 +7,10 @@ const mockAllSiteYaml = {
     {
       site: {
         name: 'lulutracy',
+        description:
+          'Art portfolio of lulutracy - exploring nature through watercolors and acrylics',
+        author: 'Tracy Mah',
+        email: 'tracy@lulutracy.com',
         url: 'https://alexnodeland.github.io/lulutracy.com',
       },
     },
@@ -18,9 +22,23 @@ const mockData = {
     frontmatter: {
       title: 'About',
       artistName: ';-)',
-      photo: 'about.jpeg',
+      photo: {
+        childImageSharp: {
+          gatsbyImageData: {
+            layout: 'constrained' as const,
+            width: 500,
+            height: 500,
+            images: {
+              fallback: {
+                src: '/static/about.jpg',
+              },
+            },
+          },
+        },
+      },
     },
     html: '<p>This is the artist biography.</p><p>More content here.</p>',
+    excerpt: 'This is the artist biography. More content here.',
   },
   allSiteYaml: mockAllSiteYaml,
 }
@@ -52,14 +70,29 @@ describe('AboutPage', () => {
     renderAboutPage()
     const contactLink = screen.getByRole('link', { name: /contact/i })
     expect(contactLink).toBeInTheDocument()
-    expect(contactLink).toHaveAttribute('href', 'mailto:contact@lulutracy.com')
+    expect(contactLink).toHaveAttribute('href', 'mailto:tracy@lulutracy.com')
   })
 
   it('renders the artist photo', () => {
     renderAboutPage()
-    const images = screen.getAllByRole('img', { name: /lulu tracy/i })
+    const images = screen.getAllByRole('img', { name: /tracy mah/i })
     // Should have at least one image (logo in header and about photo)
     expect(images.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('renders placeholder when image is not available', () => {
+    const dataWithoutImage = {
+      ...mockData,
+      markdownRemark: {
+        ...mockData.markdownRemark,
+        frontmatter: {
+          ...mockData.markdownRemark.frontmatter,
+          photo: null,
+        },
+      },
+    }
+    render(<AboutPage data={dataWithoutImage} {...({} as any)} />)
+    expect(screen.getByText(/photo not available/i)).toBeInTheDocument()
   })
 })
 

@@ -31,7 +31,7 @@ This project is maintained via **Claude Code Web** and **GitHub**. No local setu
 ### Other Content
 
 - **About page**: Edit `content/about.md`
-- **Site settings**: Edit `content/site.yaml`
+- **Site settings**: Edit `content/site/index.yaml`
 
 ### Code Changes
 

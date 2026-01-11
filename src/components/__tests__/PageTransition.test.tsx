@@ -3,11 +3,13 @@ import { render, screen, fireEvent, act } from '@testing-library/react'
 import PageTransition from '../PageTransition'
 import { LocationProvider } from '../LocationContext'
 
-// Mock gatsby navigate
+// Mock gatsby navigate and withPrefix
 const mockNavigate = jest.fn()
+const mockWithPrefix = jest.fn((path: string) => path)
 jest.mock('gatsby', () => ({
   ...jest.requireActual('gatsby'),
   navigate: (path: string) => mockNavigate(path),
+  withPrefix: (path: string) => mockWithPrefix(path),
 }))
 
 const renderWithLocation = (
@@ -23,6 +25,8 @@ describe('PageTransition', () => {
   beforeEach(() => {
     jest.useFakeTimers()
     mockNavigate.mockClear()
+    mockWithPrefix.mockClear()
+    mockWithPrefix.mockImplementation((path: string) => path)
   })
 
   afterEach(() => {
@@ -77,7 +81,7 @@ describe('PageTransition', () => {
 
     // After transition duration, navigation should occur
     act(() => {
-      jest.advanceTimersByTime(150)
+      jest.advanceTimersByTime(500)
     })
 
     expect(mockNavigate).toHaveBeenCalledWith('/about')
@@ -140,7 +144,7 @@ describe('PageTransition', () => {
 
     // Should not navigate for same-page links
     act(() => {
-      jest.advanceTimersByTime(150)
+      jest.advanceTimersByTime(500)
     })
 
     expect(mockNavigate).not.toHaveBeenCalled()
@@ -195,7 +199,7 @@ describe('PageTransition', () => {
 
     // After transition duration, new content should appear
     act(() => {
-      jest.advanceTimersByTime(150)
+      jest.advanceTimersByTime(500)
     })
 
     expect(screen.getByText('Page 2')).toBeInTheDocument()
@@ -234,5 +238,82 @@ describe('PageTransition', () => {
     fireEvent.click(link)
 
     expect(mockNavigate).not.toHaveBeenCalled()
+  })
+
+  describe('with path prefix', () => {
+    beforeEach(() => {
+      mockWithPrefix.mockImplementation(
+        (path: string) => `/lulutracy.com${path}`
+      )
+    })
+
+    it('strips path prefix from href before navigating', () => {
+      renderWithLocation(
+        <PageTransition>
+          <a href="/lulutracy.com/about">About</a>
+        </PageTransition>,
+        '/'
+      )
+
+      act(() => {
+        jest.advanceTimersByTime(50)
+      })
+
+      const link = screen.getByText('About')
+      fireEvent.click(link)
+
+      act(() => {
+        jest.advanceTimersByTime(500)
+      })
+
+      // Should navigate with stripped prefix
+      expect(mockNavigate).toHaveBeenCalledWith('/about')
+    })
+
+    it('handles root path with prefix correctly', () => {
+      renderWithLocation(
+        <PageTransition>
+          <a href="/lulutracy.com">Home</a>
+        </PageTransition>,
+        '/about'
+      )
+
+      act(() => {
+        jest.advanceTimersByTime(50)
+      })
+
+      const link = screen.getByText('Home')
+      fireEvent.click(link)
+
+      act(() => {
+        jest.advanceTimersByTime(500)
+      })
+
+      // Should navigate to root when prefix is stripped and nothing remains
+      expect(mockNavigate).toHaveBeenCalledWith('/')
+    })
+
+    it('does not strip prefix for non-prefixed paths', () => {
+      renderWithLocation(
+        <PageTransition>
+          <a href="/about">About</a>
+        </PageTransition>,
+        '/'
+      )
+
+      act(() => {
+        jest.advanceTimersByTime(50)
+      })
+
+      const link = screen.getByText('About')
+      fireEvent.click(link)
+
+      act(() => {
+        jest.advanceTimersByTime(500)
+      })
+
+      // Should navigate with original path
+      expect(mockNavigate).toHaveBeenCalledWith('/about')
+    })
   })
 })

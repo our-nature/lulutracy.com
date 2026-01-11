@@ -47,7 +47,7 @@ content/
 │   ├── index.yaml   # Painting metadata (id, title, description, etc.)
 │   └── images/      # Painting image files
 ├── about.md         # About page content (Markdown + frontmatter)
-└── site.yaml        # Site configuration
+└── site/index.yaml  # Site configuration
 
 Key config files:
 - gatsby-config.js   # Gatsby plugins and site metadata
@@ -193,7 +193,7 @@ Edit `content/about.md` - supports Markdown with YAML frontmatter for title, art
 
 ### Site Configuration
 
-Edit `content/site.yaml` for site-wide settings (title, navigation, social links, copyright).
+Edit `content/site/index.yaml` for site-wide settings (title, navigation, social links, copyright).
 
 ## CI/CD Pipeline
 
