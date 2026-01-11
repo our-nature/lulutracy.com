@@ -46,13 +46,44 @@ const getBasePath = (path: string): string => {
 // Must match --transition-fast in global.css
 const TRANSITION_DURATION = 500
 
+// Session storage key for skipping transition on language changes
+const SKIP_TRANSITION_KEY = 'pageTransition:skipNext'
+
+// Check if we should skip the initial fade-in (e.g., after language change)
+const shouldSkipInitialTransition = (): boolean => {
+  if (typeof window === 'undefined') return false
+  try {
+    const skip = sessionStorage.getItem(SKIP_TRANSITION_KEY)
+    if (skip === 'true') {
+      sessionStorage.removeItem(SKIP_TRANSITION_KEY)
+      return true
+    }
+  } catch {
+    // sessionStorage not available
+  }
+  return false
+}
+
+// Mark that the next page load should skip the transition
+export const skipNextTransition = (): void => {
+  if (typeof window === 'undefined') return
+  try {
+    sessionStorage.setItem(SKIP_TRANSITION_KEY, 'true')
+  } catch {
+    // sessionStorage not available
+  }
+}
+
 interface PageTransitionProps {
   children: React.ReactNode
 }
 
 const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
   const location = useLocation()
-  const [isVisible, setIsVisible] = useState(false)
+  // Start visible if we're skipping the transition (e.g., language change)
+  const [isVisible, setIsVisible] = useState(() =>
+    shouldSkipInitialTransition()
+  )
   const [transitionChildren, setTransitionChildren] = useState(children)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const previousPathRef = useRef(location.pathname)
