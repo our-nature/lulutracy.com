@@ -8,6 +8,13 @@ jest.mock('../ThemeContext', () => ({
   ThemeProvider: ({ children }: { children: React.ReactNode }) => children,
 }))
 
+// Mock LanguageSwitcher
+jest.mock('../LanguageSwitcher', () => {
+  return function MockLanguageSwitcher() {
+    return <div data-testid="language-switcher">Language Switcher</div>
+  }
+})
+
 describe('Navigation', () => {
   const mockOnClose = jest.fn()
 
@@ -57,5 +64,11 @@ describe('Navigation', () => {
       fireEvent.click(overlay)
       expect(mockOnClose).toHaveBeenCalledTimes(1)
     }
+  })
+
+  it('renders settings section with language switcher and theme toggle', () => {
+    render(<Navigation isOpen={true} onClose={mockOnClose} />)
+    expect(screen.getByTestId('language-switcher')).toBeInTheDocument()
+    expect(screen.getByRole('button')).toBeInTheDocument() // ThemeToggle button
   })
 })
