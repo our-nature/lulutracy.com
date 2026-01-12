@@ -1,23 +1,24 @@
 /**
  * @type {import('gatsby').GatsbyConfig}
  */
+const siteUrl = process.env.SITE_URL || `https://lulutracy.pages.dev`
+
 module.exports = {
   siteMetadata: {
     title: `lulutracy`,
     description: `Art portfolio of lulutracy - exploring nature through watercolors and acrylics`,
     author: `lulutracy`,
-    siteUrl: `https://our-nature.github.io/lulutracy.com`,
+    siteUrl,
     supportedLanguages: ['en', 'zh', 'yue', 'ms'],
     defaultLanguage: 'en',
   },
-  pathPrefix: process.env.PREFIX_PATHS === 'true' ? `/lulutracy.com` : ``,
   plugins: [
     {
       resolve: `gatsby-plugin-sitemap`,
       options: {
-        resolveSiteUrl: () => `https://our-nature.github.io/lulutracy.com`,
+        resolveSiteUrl: () => siteUrl,
         serialize: ({ path }) => ({
-          url: `https://our-nature.github.io/lulutracy.com${path}`,
+          url: `${siteUrl}${path}`,
           changefreq: `weekly`,
           priority: path === `/` ? 1.0 : 0.7,
         }),
@@ -93,7 +94,7 @@ module.exports = {
         languages: ['en', 'zh', 'yue', 'ms'],
         defaultLanguage: 'en',
         generateDefaultLanguagePages: true,
-        siteUrl: `https://our-nature.github.io/lulutracy.com`,
+        siteUrl,
         i18nextOptions: {
           interpolation: {
             escapeValue: false,
