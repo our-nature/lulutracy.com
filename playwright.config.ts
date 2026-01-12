@@ -4,22 +4,27 @@ import { defineConfig, devices } from '@playwright/test'
  * Playwright configuration for E2E testing
  * @see https://playwright.dev/docs/test-configuration
  */
+
+// Use static serve (port 9000) in CI, dev server (port 8000) locally
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:8000'
+const isCI = !!process.env.CI
+
 export default defineConfig({
   testDir: './e2e',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code */
-  forbidOnly: !!process.env.CI,
+  forbidOnly: isCI,
   /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
+  retries: isCI ? 2 : 0,
   /* Opt out of parallel tests on CI */
-  workers: process.env.CI ? 1 : undefined,
+  workers: isCI ? 1 : undefined,
   /* Reporter to use */
-  reporter: process.env.CI ? 'github' : 'html',
+  reporter: isCI ? 'github' : 'html',
   /* Shared settings for all the projects below */
   use: {
     /* Base URL to use in actions like `await page.goto('/')` */
-    baseURL: 'http://localhost:8000',
+    baseURL,
 
     /* Collect trace when retrying the failed test */
     trace: 'on-first-retry',
@@ -40,11 +45,12 @@ export default defineConfig({
     },
   ],
 
-  /* Run your local dev server before starting the tests */
+  /* Run server before starting the tests */
   webServer: {
-    command: 'npm run develop',
-    url: 'http://localhost:8000',
-    reuseExistingServer: !process.env.CI,
+    // Use gatsby serve (static) in CI, gatsby develop (HMR) locally
+    command: isCI ? 'npm run serve' : 'npm run develop',
+    url: baseURL,
+    reuseExistingServer: !isCI,
     timeout: 120 * 1000,
   },
 })
