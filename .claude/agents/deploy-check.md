@@ -1,6 +1,6 @@
 ---
 name: deploy-check
-description: Pre-deployment verification and troubleshooting for GitHub Pages. Use before deploying, when deployments fail, or to verify production readiness.
+description: Pre-deployment verification and troubleshooting for Cloudflare Pages. Use before deploying, when deployments fail, or to verify production readiness.
 tools: Read, Bash, Grep, Glob
 model: sonnet
 skills: lighthouse-fix
@@ -8,9 +8,9 @@ skills: lighthouse-fix
 
 # Deployment Checker
 
-**Role**: Deployment specialist for GitHub Pages hosting of this Gatsby portfolio.
+**Role**: Deployment specialist for Cloudflare Pages hosting of this Gatsby portfolio.
 
-**Expertise**: GitHub Pages configuration, path prefixes, build verification, CI/CD workflows, production readiness.
+**Expertise**: Cloudflare Pages configuration, build verification, CI/CD workflows, production readiness.
 
 ## Pre-Deployment Checklist
 
@@ -23,18 +23,12 @@ make ci
 # If CI passes, build is production-ready
 ```
 
-### 2. Path Prefix Check
+### 2. Site URL
 
-This site uses path prefix for GitHub Pages:
+- **Site URL**: https://lulutracy.com
+- **Cloudflare Pages URL**: https://lulutracy.pages.dev
 
-- **Site URL**: https://our-nature.github.io/lulutracy.com
-- **Path Prefix**: `/lulutracy.com`
-
-Verify in `gatsby-config.js`:
-
-```javascript
-pathPrefix: `/lulutracy.com`,
-```
+No path prefix is needed since the site is served from the root domain.
 
 ### 3. Asset Paths
 
@@ -69,7 +63,7 @@ import { StaticImage } from 'gatsby-plugin-image'
 ```bash
 make build
 make serve
-# Visit http://localhost:9000/lulutracy.com/
+# Visit http://localhost:9000/
 ```
 
 ### Check Build Output
@@ -88,10 +82,10 @@ ls public/static/
 
 ### Test All Routes
 
-- [ ] Homepage: `/lulutracy.com/`
-- [ ] About: `/lulutracy.com/about`
-- [ ] Individual paintings: `/lulutracy.com/painting/{id}`
-- [ ] 404 page: `/lulutracy.com/nonexistent`
+- [ ] Homepage: `/`
+- [ ] About: `/about`
+- [ ] Individual paintings: `/painting/{id}`
+- [ ] 404 page: `/nonexistent`
 
 ## CI/CD Workflow
 
@@ -106,8 +100,8 @@ ls public/static/
 ### Deployment Trigger
 
 - Push to `main` branch triggers `deploy.yml`
-- Builds site and deploys to `gh-pages` branch
-- GitHub Pages serves from `gh-pages`
+- Builds site and deploys to Cloudflare Pages
+- Cloudflare Pages serves from custom domain
 
 ### Check Workflow Status
 
@@ -170,14 +164,14 @@ NODE_OPTIONS="--max-old-space-size=4096"
 
 After deployment completes:
 
-1. **Visit live site**: https://our-nature.github.io/lulutracy.com
+1. **Visit live site**: https://lulutracy.com
 2. **Check all navigation**: Click through all links
 3. **Verify images load**: Gallery and about page photos
 4. **Test on mobile**: Responsive layout works
 5. **Run Lighthouse**: Check production performance
 
 ```bash
-npx lighthouse https://our-nature.github.io/lulutracy.com --view
+npx lighthouse https://lulutracy.com --view
 ```
 
 ## Output Format

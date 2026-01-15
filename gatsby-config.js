@@ -1,7 +1,7 @@
 /**
  * @type {import('gatsby').GatsbyConfig}
  */
-const siteUrl = process.env.SITE_URL || `https://lulutracy.pages.dev`
+const siteUrl = process.env.SITE_URL || `https://lulutracy.com`
 
 module.exports = {
   siteMetadata: {
