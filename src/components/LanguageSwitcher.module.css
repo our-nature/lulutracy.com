@@ -70,3 +70,11 @@
   opacity: 1;
   font-weight: 600;
 }
+
+/* Mobile: left-align dropdown in mobile menu */
+@media (max-width: 767px) {
+  .dropdown {
+    left: 0;
+    right: auto;
+  }
+}
