@@ -16,7 +16,7 @@
 .backLink {
   display: inline-flex;
   align-items: center;
-  gap: var(--spacing-xs);
+  gap: var(--spacing-sm);
   font-size: var(--font-size-sm);
   color: var(--color-text-light);
   text-decoration: none;
@@ -44,7 +44,7 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  color: var(--color-text);
+  color: var(--color-text-light);
   border: none;
   background: transparent;
   text-decoration: none;
