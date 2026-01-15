@@ -77,9 +77,20 @@ const LanguageSwitcher: React.FC = () => {
         type="button"
       >
         <span lang={language}>{LANGUAGE_NAMES[language] || language}</span>
-        <span className={styles.chevron} aria-hidden="true">
-          ▾
-        </span>
+        <svg
+          className={`${styles.caret} ${isOpen ? styles.caretOpen : ''}`}
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
       </button>
       {isOpen && (
         <ul className={styles.dropdown} role="listbox">
