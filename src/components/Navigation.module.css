@@ -11,11 +11,13 @@
   transition:
     opacity var(--transition-base),
     visibility var(--transition-base);
+  pointer-events: none;
 }
 
 .overlayOpen {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
 }
 
 .nav {
